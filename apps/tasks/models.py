@@ -8,7 +8,7 @@ class Task(models.Model):
     title = models.CharField(max_length=50)
     description = models.TextField()
     status = models.BooleanField(default=False, verbose_name='Completed')
-    assign_to = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name='tasks')
+    assigned_to = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tasks', null=True)
 
     class Meta:
         verbose_name = 'Task'

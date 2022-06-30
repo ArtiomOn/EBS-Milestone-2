@@ -1,9 +1,9 @@
 from django.contrib import admin
 from django.contrib.admin import ModelAdmin
 
-from apps.tasks.models import Task
+from apps.users.models import CustomUser
 
 
-@admin.register(Task)
-class TaskAdmin(ModelAdmin):
-    list_display = ('id', 'title', 'status')
+@admin.register(CustomUser)
+class CustomUserAdmin(ModelAdmin):
+    list_display = ('id', 'username', 'first_name', 'last_name', 'email', 'is_superuser', 'is_staff')

@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+from datetime import timedelta
+
 from dotenv import load_dotenv
 from django.utils.translation import gettext_lazy as _
 
@@ -89,10 +91,12 @@ CORS_ALLOW_HEADERS = (
     'cache-control'
 )
 
+AUTH_USER_MODEL = 'users.CustomUser'
+
 REST_FRAMEWORK = {
     'DATETIME_FORMAT': "%Y-%m-%dT%H:%M:%SZ",
     'DEFAULT_AUTHENTICATION_CLASSES': (
-         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
@@ -105,7 +109,7 @@ REST_FRAMEWORK = {
 
 SWAGGER_SETTINGS = {
     'SECURITY_DEFINITIONS': {
-        'Token': {
+        'Bearer': {
             'type': 'apiKey',
             'name': 'Authorization',
             'in': 'header'
@@ -116,7 +120,6 @@ SWAGGER_SETTINGS = {
 FIXTURE_DIRS = (
     'fixtures/',
 )
-
 
 DEFAULT_LANG = "ro"
 LANGUAGES = [
@@ -153,7 +156,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-
 DATE_FORMAT = "%Y-%m-%d %H:%m"
 
 TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
@@ -162,7 +164,6 @@ NOSE_ARGS = [
     '--with-coverage',
     '--cover-package=' + ','.join([app + '.views' for app in INSTALLED_APPS if app.startswith('apps.')]),
 ]
-
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 
@@ -174,7 +175,6 @@ load_dotenv(verbose=DEBUG)
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 WSGI_AUTO_RELOAD = True
-
 
 DEBUG_LEVEL = "INFO"
 
@@ -218,3 +218,10 @@ DATABASES = {
         'NAME': 'db.sqlite3',
     }
 }
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=7),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
+}
+
+
