@@ -13,12 +13,13 @@ from rest_framework.mixins import (
     DestroyModelMixin,
 )
 
-from apps.tasks.models import Task
+from apps.tasks.models import Task, Comment
 from apps.tasks.serializers import (
     TaskSerializer,
     TaskListSerializer,
     TaskAssignNewUserSerializer,
     TaskUpdateStatusSerializer,
+    CommentSerializer
 )
 
 User = get_user_model()
@@ -76,3 +77,21 @@ class TaskViewSet(
         instance.status = True
         instance.save()
         return Response(status=status.HTTP_200_OK)
+
+
+class TaskCommentViewSet(
+    ListModelMixin,
+    CreateModelMixin,
+    GenericViewSet
+):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = (AllowAny,)
+
+    def get_queryset(self):
+        if self.action == 'list':
+            return self.queryset.filter(task_id=self.kwargs.get('task__pk'))
+        return super(TaskCommentViewSet, self).get_queryset()
+
+    def perform_create(self, serializer):
+        serializer.save(task_id=self.kwargs.get('task__pk'))

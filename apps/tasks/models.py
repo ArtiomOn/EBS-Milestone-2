@@ -16,3 +16,15 @@ class Task(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class Comment(models.Model):
+    text = models.TextField()
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='comments', null=True)
+
+    class Meta:
+        verbose_name = 'Comment'
+        verbose_name_plural = 'Comments'
+
+    def __str__(self):
+        return f'{self.id}'

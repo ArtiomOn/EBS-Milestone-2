@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from apps.tasks.models import Task
+from apps.tasks.models import Task, Comment
 
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -30,4 +30,13 @@ class TaskUpdateStatusSerializer(serializers.ModelSerializer):
         fields = ('status',)
         extra_kwargs = {
             'status': {'read_only': True}
+        }
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = '__all__'
+        extra_kwargs = {
+            'task': {'read_only': True}
         }
