@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.mixins import ListModelMixin
 from rest_framework.decorators import action
 from rest_framework import status
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.viewsets import GenericViewSet
@@ -17,7 +17,7 @@ class UserViewSet(ListModelMixin, GenericViewSet):
     serializer_class = UserListSerializer
     queryset = User.objects.all()
 
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAdminUser,)
     authentication_classes = ()
 
     @action(methods=['post'], detail=False, url_path='register', serializer_class=UserSerializer,

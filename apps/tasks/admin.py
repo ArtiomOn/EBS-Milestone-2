@@ -11,4 +11,4 @@ class TaskAdmin(ModelAdmin):
 
 @admin.register(Comment)
 class CommentAdmin(ModelAdmin):
-    list_display = ('id', 'task')
+    list_display = ('id', 'task_id', 'assigned_to')

@@ -21,6 +21,7 @@ class Task(models.Model):
 class Comment(models.Model):
     text = models.TextField()
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='comments', null=True)
+    assigned_to = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments', null=True)
 
     class Meta:
         verbose_name = 'Comment'

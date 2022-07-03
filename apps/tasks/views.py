@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.core.mail import send_mail
 
 from rest_framework import status
 from rest_framework.decorators import action
@@ -21,6 +22,7 @@ from apps.tasks.serializers import (
     TaskUpdateStatusSerializer,
     CommentSerializer
 )
+from config import settings
 
 User = get_user_model()
 
@@ -66,6 +68,9 @@ class TaskViewSet(
         serializer.is_valid(raise_exception=True)
         serializer.save()
         instance.assigned_to = serializer.validated_data['assigned_to']
+        user_email = User.objects.get(id=instance.assigned_to.id).email
+        self.send_email_task(message=f'Task with id:{instance.id} is assigned to you',
+                             subject='Task assign to you', recipient_list=[user_email])
         return Response(status=status.HTTP_200_OK)
 
     @action(methods=['patch'], detail=True, url_path='update_task_status', serializer_class=TaskUpdateStatusSerializer)
@@ -76,7 +81,18 @@ class TaskViewSet(
         serializer.save()
         instance.status = True
         instance.save()
+
+        comments = Comment.objects.all().filter(task_id=instance.id).values_list('assigned_to', flat=True)
+        users_email = User.objects.filter(id__in=comments.all()).values_list('email', flat=True)
+        self.send_email_task(message='commented task is completed', subject='commented task is completed',
+                             recipient_list=list(users_email))
+
         return Response(status=status.HTTP_200_OK)
+
+    @classmethod
+    def send_email_task(cls, message, subject, recipient_list):
+        send_mail(message=message, subject=subject, from_email=settings.EMAIL_HOST_USER,
+                  recipient_list=recipient_list, fail_silently=False)
 
 
 class TaskCommentViewSet(
@@ -94,4 +110,17 @@ class TaskCommentViewSet(
         return super(TaskCommentViewSet, self).get_queryset()
 
     def perform_create(self, serializer):
-        serializer.save(task_id=self.kwargs.get('task__pk'))
+        task_id = self.kwargs.get('task__pk')
+        assigned_to = User.objects.get(email='testemaildjango49@gmail.com')  # TODO replace with the line below
+        serializer.save(assigned_to=assigned_to, task_id=task_id)  # TODO replace with the line below
+        # serializer.save(assigned_to=self.request.user, task_id=task_id) TODO correct variant
+
+        user_task = Task.objects.get(id=task_id).assigned_to_id
+        user_email = User.objects.get(id=user_task).email
+        self.send_email_comment(message=f'You task with id:{task_id} is commented',
+                                subject='Your task is commented', recipient_list=user_email)
+
+    @classmethod
+    def send_email_comment(cls, message, subject, recipient_list):
+        send_mail(message=message, subject=subject, from_email=settings.EMAIL_HOST_USER,
+                  recipient_list=[recipient_list], fail_silently=False)
