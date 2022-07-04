@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 
-from rest_framework import status
+from rest_framework import status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
@@ -14,6 +14,7 @@ from rest_framework.mixins import (
     DestroyModelMixin,
 )
 
+from apps.tasks.filtersets import TaskFilterSet
 from apps.tasks.models import Task, Comment
 from apps.tasks.serializers import (
     TaskSerializer,
@@ -38,6 +39,9 @@ class TaskViewSet(
     serializer_class = TaskSerializer
     permission_classes = (AllowAny,)
     authentication_classes = [JWTAuthentication]
+    filter_backends = [filters.SearchFilter]
+    filterset_class = TaskFilterSet
+    search_fields = ['title']
 
     def get_serializer_class(self):
         if self.action == 'list':
