@@ -49,13 +49,11 @@ class TaskViewSet(
         return super(TaskViewSet, self).get_serializer_class()
 
     def perform_create(self, serializer):
-        serializer.save()  # Todo change to the line below | remove bug with AnonymousUser
-        # serializer.save(assigned_to=self.request.user) TODO correct variant
+        serializer.save(assigned_to=self.request.user)
 
     @action(methods=['get'], url_path='my_task', detail=False, serializer_class=TaskListSerializer)
     def my_task(self, request, *args, **kwargs):
-        queryset = self.queryset.filter(assigned_to=User.objects.get(id=1))  # TODO change to the line below
-        # queryset = self.queryset.filter(assigned_to=request.user) TODO correct variant
+        queryset = self.queryset.filter(assigned_to=request.user)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -107,6 +105,7 @@ class TaskCommentViewSet(
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = (AllowAny,)
+    authentication_classes = [JWTAuthentication]
 
     def get_queryset(self):
         if self.action == 'list':
@@ -115,9 +114,7 @@ class TaskCommentViewSet(
 
     def perform_create(self, serializer):
         task_id = self.kwargs.get('task__pk')
-        assigned_to = User.objects.get(email='testemaildjango49@gmail.com')  # TODO replace with the line below
-        serializer.save(assigned_to=assigned_to, task_id=task_id)  # TODO replace with the line below
-        # serializer.save(assigned_to=self.request.user, task_id=task_id) TODO correct variant
+        serializer.save(assigned_to=self.request.user, task_id=task_id)
 
         user_task = Task.objects.get(id=task_id).assigned_to_id
         user_email = User.objects.get(id=user_task).email

@@ -5,6 +5,7 @@ from rest_framework.decorators import action
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.viewsets import GenericViewSet
 
@@ -18,7 +19,7 @@ class UserViewSet(ListModelMixin, GenericViewSet):
     queryset = User.objects.all()
 
     permission_classes = (IsAdminUser,)
-    authentication_classes = ()
+    authentication_classes = [JWTAuthentication]
 
     @action(methods=['post'], detail=False, url_path='register', serializer_class=UserSerializer,
             permission_classes=(AllowAny,))
