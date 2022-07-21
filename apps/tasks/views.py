@@ -1,11 +1,12 @@
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
+from django.db.models import Sum
 
 from rest_framework import status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.mixins import (
     ListModelMixin,
@@ -14,16 +15,25 @@ from rest_framework.mixins import (
     DestroyModelMixin,
 )
 
+from config import settings
 from apps.tasks.filtersets import TaskFilterSet
-from apps.tasks.models import Task, Comment
+from apps.tasks.models import (
+    Task,
+    Comment,
+    TimeLog,
+)
 from apps.tasks.serializers import (
     TaskSerializer,
     TaskListSerializer,
     TaskAssignNewUserSerializer,
     TaskUpdateStatusSerializer,
-    CommentSerializer
+    CommentSerializer,
+    TimeLogSerializer,
+    TimeLogCreateSerializer,
+    TimeLogUserDetailSerializer,
 )
-from config import settings
+
+from datetime import datetime, timedelta
 
 User = get_user_model()
 
@@ -33,15 +43,20 @@ class TaskViewSet(
     RetrieveModelMixin,
     CreateModelMixin,
     DestroyModelMixin,
-    GenericViewSet,
+    GenericViewSet
 ):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
     authentication_classes = [JWTAuthentication]
     filter_backends = [filters.SearchFilter]
     filterset_class = TaskFilterSet
     search_fields = ['title']
+
+    def get_queryset(self):
+        if self.action == 'list':
+            return self.queryset.annotate(duration=Sum('time_logs__duration'))
+        return super(TaskViewSet, self).get_queryset()
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -104,7 +119,7 @@ class TaskCommentViewSet(
 ):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
     authentication_classes = [JWTAuthentication]
 
     def get_queryset(self):
@@ -125,3 +140,70 @@ class TaskCommentViewSet(
     def send_email_comment(cls, message, subject, recipient_list):
         send_mail(message=message, subject=subject, from_email=settings.EMAIL_HOST_USER,
                   recipient_list=[recipient_list], fail_silently=False)
+
+
+class TaskTimeLogViewSet(
+    ListModelMixin,
+    CreateModelMixin,
+    GenericViewSet
+):
+    queryset = TimeLog.objects.all()
+    serializer_class = TimeLogSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = (IsAuthenticated,)
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return TimeLogCreateSerializer
+        return super(TaskTimeLogViewSet, self).get_serializer_class()
+
+    def perform_create(self, serializer):
+        duration = timedelta(minutes=self.request.data['duration'])
+        serializer.save(task_id=self.kwargs.get('task__pk'),
+                        user=self.request.user,
+                        duration=duration)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset().filter(task_id=self.kwargs.get('task__pk'))
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(methods=['get'], url_path='start_timer', detail=False)
+    def start_timer(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        queryset.create(
+            task_id=self.kwargs.get('task__pk'),
+            user=self.request.user,
+            started_at=datetime.now()
+        )
+        return Response(status=status.HTTP_201_CREATED)
+
+    @action(methods=['get'], url_path='stop_timer', detail=False)
+    def stop_timer(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        instance = queryset.filter(
+            duration=None,
+            user=self.request.user
+        ).first()
+        instance.duration = datetime.now() - instance.started_at
+        instance.save()
+        return Response(status=status.HTTP_200_OK)
+
+
+class TimeLogViewSet(
+    GenericViewSet
+):
+    queryset = TimeLog.objects.all()
+    serializer_class = TimeLogUserDetailSerializer
+    authentication_classes = [JWTAuthentication]
+    permission_classes = (IsAuthenticated,)
+
+    @action(methods=['get'], detail=False, url_path='time_logs_month')
+    def time_logs_month(self, request, *args, **kwargs):
+        queryset = self.queryset.filter(
+            user=self.request.user,
+            started_at__month=TimeLog.timelog_month(self.queryset.first()),
+        )
+        serializer = self.get_serializer(queryset, many=True)
+        serializer.total_time = queryset.aggregate(Sum('duration'))
+        return Response(serializer.total_time)
