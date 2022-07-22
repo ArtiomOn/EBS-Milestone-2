@@ -199,10 +199,10 @@ class TimeLogViewSet(
     permission_classes = (IsAuthenticated,)
 
     @action(methods=['get'], detail=False, url_path='time_logs_month')
-    def time_logs_month(self, request, *args, **kwargs):
+    def time_log_month(self, request, *args, **kwargs):
         queryset = self.queryset.filter(
             user=self.request.user,
-            started_at__month=TimeLog.timelog_month(self.queryset.first()),
+            started_at__month=TimeLog.current_month(),
         )
         serializer = self.get_serializer(queryset, many=True)
         serializer.total_time = queryset.aggregate(Sum('duration'))

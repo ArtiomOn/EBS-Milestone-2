@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 
+from datetime import datetime
+
 User = get_user_model()
 
 
@@ -80,5 +82,6 @@ class TimeLog(models.Model):
     def __str__(self):
         return f'{self.id}'
 
-    def timelog_month(self):
-        return self.started_at.strftime('%M')
+    @staticmethod
+    def current_month():
+        return datetime.now().strftime('%m')
