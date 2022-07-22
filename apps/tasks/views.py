@@ -191,12 +191,16 @@ class TaskTimeLogViewSet(
 
 
 class TimeLogViewSet(
+    ListModelMixin,
     GenericViewSet
 ):
     queryset = TimeLog.objects.all()
     serializer_class = TimeLogUserDetailSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        return self.filter_queryset(self.queryset.order_by('-duration'))[:5]
 
     @action(methods=['get'], detail=False, url_path='time_logs_month')
     def time_log_month(self, request, *args, **kwargs):

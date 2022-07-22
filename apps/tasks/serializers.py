@@ -74,7 +74,7 @@ class TimeLogUserDetailSerializer(ModelSerializer):
 
     class Meta:
         model = TimeLog
-        fields = ('id', 'total_time', 'started_at')
+        fields = ('id', 'total_time', 'started_at', 'duration')
         extra_kwargs = {
             'started_at': {'read_only': True}
         }
