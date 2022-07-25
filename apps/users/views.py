@@ -3,13 +3,17 @@ from django.contrib.auth import get_user_model
 from rest_framework.mixins import ListModelMixin
 from rest_framework.decorators import action
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.viewsets import GenericViewSet
 
-from apps.users.serializers import UserSerializer, UserCreateSerializer, UserListSerializer
+from apps.users.serializers import (
+    UserSerializer,
+    UserCreateSerializer,
+    UserListSerializer
+)
 
 User = get_user_model()
 
@@ -20,6 +24,7 @@ class UserViewSet(
 ):
     serializer_class = UserListSerializer
     queryset = User.objects.all()
+    permission_classes = (IsAdminUser,)
 
     authentication_classes = [JWTAuthentication]
 
