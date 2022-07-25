@@ -138,8 +138,14 @@ class TaskTestCase(APITestCase):
 
     def test_simple_user_my_task_list(self):
         content = [
-            {'id': 3, 'title': '#3'},
-            {'id': 4, 'title': '#4'}
+            {
+                'id': 3,
+                'title': '#3'
+            },
+            {
+                'id': 4,
+                'title': '#4'
+            }
         ]
         response = self.client.get(path='/tasks/tasks/my_task/', **auth(self.simple_user))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
