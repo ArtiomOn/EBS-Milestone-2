@@ -90,7 +90,7 @@ class TaskViewSet(
                              subject='Task assign to you', recipient_list=[user_email])
         return Response(status=status.HTTP_200_OK)
 
-    @action(methods=['patch'], detail=True, url_path='update_task_status', serializer_class=TaskUpdateStatusSerializer)
+    @action(methods=['get'], detail=True, url_path='update_task_status', serializer_class=TaskUpdateStatusSerializer)
     def update_status(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data)
@@ -159,9 +159,11 @@ class TaskTimeLogViewSet(
 
     def perform_create(self, serializer):
         duration = timedelta(minutes=self.request.data['duration'])
-        serializer.save(task_id=self.kwargs.get('task__pk'),
-                        user=self.request.user,
-                        duration=duration)
+        serializer.save(
+            task_id=self.kwargs.get('task__pk'),
+            user=self.request.user,
+            duration=duration
+        )
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset().filter(task_id=self.kwargs.get('task__pk'))
