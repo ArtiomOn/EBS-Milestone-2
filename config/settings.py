@@ -107,7 +107,8 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': (
         'django_filters.rest_framework.DjangoFilterBackend',
     ),
-    'EXCEPTION_HANDLER': 'apps.common.exceptions.custom_exception_handler'
+    'EXCEPTION_HANDLER': 'apps.common.exceptions.custom_exception_handler',
+    'TEST_REQUEST_DEFAULT_FORMAT': 'json'
 }
 
 SWAGGER_SETTINGS = {
