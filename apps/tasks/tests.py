@@ -369,7 +369,7 @@ class TaskTestCase(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_simple_user_list_timelog(self):
+    def test_simple_user_list_task_timelog(self):
         task_id: int = 4
         response = self.client.get(
             f'/tasks/tasks/{task_id}/task_timelogs/',
@@ -387,7 +387,7 @@ class TaskTestCase(APITestCase):
             ).minute
         )
 
-    def test_admin_user_list_timelog(self):
+    def test_admin_user_list_task_timelog(self):
         task_id: int = 2
         response = self.client.get(
             f'/tasks/tasks/{task_id}/task_timelogs/',
@@ -405,10 +405,146 @@ class TaskTestCase(APITestCase):
             ).minute
         )
 
-    def test_unauthorized_user_list_timelog(self):
+    def test_unauthorized_user_list_task_timelog(self):
         task_id: int = 3
         response = self.client.get(
             f'/tasks/tasks/{task_id}/task_timelogs/',
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_simple_user_create_timelog(self):
+        task_id: int = 1
+        data = {
+            "started_at": datetime.now(),
+            "duration": 10
+        }
+        response = self.client.post(
+            f'/tasks/tasks/{task_id}/task_timelogs/',
+            data=data,
+            **auth(self.simple_user)
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_admin_user_create_timelog(self):
+        task_id: int = 4
+        data = {
+            "started_at": datetime.now(),
+            "duration": 10
+        }
+        response = self.client.post(
+            f'/tasks/tasks/{task_id}/task_timelogs/',
+            data=data,
+            **auth(self.admin_user)
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_unauthorized_user_create_timelog(self):
+        task_id: int = 4
+        data = {
+            "started_at": datetime.now(),
+            "duration": 10
+        }
+        response = self.client.post(
+            f'/tasks/tasks/{task_id}/task_timelogs/',
+            data=data,
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_simple_user_start_timer_timelog(self):
+        task_id: int = 1
+        response = self.client.get(
+            f'/tasks/tasks/{task_id}/task_timelogs/start_timer/',
+            **auth(self.simple_user)
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_admin_user_start_timer_timelog(self):
+        task_id: int = 1
+        response = self.client.get(
+            f'/tasks/tasks/{task_id}/task_timelogs/start_timer/',
+            **auth(self.admin_user)
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_unauthorized_user_start_timer_timelog(self):
+        task_id: int = 1
+        response = self.client.get(
+            f'/tasks/tasks/{task_id}/task_timelogs/start_timer/',
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_simple_user_stop_timer_timelog(self):
+        TimeLog.objects.create(
+            task_id=1,
+            user=self.simple_user,
+            started_at=datetime.now(),
+            duration=None
+        )
+        task_id: int = 1
+        response = self.client.get(
+            f'/tasks/tasks/{task_id}/task_timelogs/stop_timer/',
+            **auth(self.simple_user)
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_admin_user_stop_timer_timelog(self):
+        TimeLog.objects.create(
+            task_id=1,
+            user=self.admin_user,
+            started_at=datetime.now(),
+            duration=None
+        )
+        task_id: int = 1
+        response = self.client.get(
+            f'/tasks/tasks/{task_id}/task_timelogs/stop_timer/',
+            **auth(self.admin_user)
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_unauthorized_user_stop_timer_timelog(self):
+        task_id: int = 1
+        response = self.client.get(
+            f'/tasks/tasks/{task_id}/task_timelogs/stop_timer/',
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_simple_user_list_timelog(self):
+        response = self.client.get(
+            f'/tasks/timelogs/',
+            **auth(self.simple_user)
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_admin_user_list_timelog(self):
+        response = self.client.get(
+            f'/tasks/timelogs/',
+            **auth(self.admin_user)
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_unauthorized_user_list_timelog(self):
+        response = self.client.get(
+            f'/tasks/timelogs/',
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_simple_user_list_month_timelog(self):
+        response = self.client.get(
+            f'/tasks/timelogs/time_logs_month/',
+            **auth(self.simple_user)
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_admin_user_list_month_timelog(self):
+        response = self.client.get(
+            f'/tasks/timelogs/time_logs_month/',
+            **auth(self.admin_user)
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_unauthorized_user_list_month_timelog(self):
+        response = self.client.get(
+            f'/tasks/timelogs/time_logs_month/',
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
