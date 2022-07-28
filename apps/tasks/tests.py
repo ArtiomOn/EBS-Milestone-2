@@ -126,6 +126,7 @@ class TaskTestCase(APITestCase):
         ])
 
     def test_simple_user_list_task(self):
+        # Simple user get list of tasks
         response = self.client.get(
             path='/tasks/tasks/',
             **auth(self.simple_user)
@@ -133,6 +134,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_admin_user_list_task(self):
+        # Admin user get list of tasks
         response = self.client.get(
             path='/tasks/tasks/',
             **auth(self.admin_user)
@@ -140,12 +142,14 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_unauthorized_user_list_task(self):
+        # Unauthorized user get list of tasks
         response = self.client.get(
             path='/tasks/tasks/'
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_simple_user_create_task(self):
+        # Simple user create new task
         data = {
             'title': 'string',
             'description': 'string',
@@ -159,6 +163,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_admin_user_create_task(self):
+        # Admin user create new task
         data = {
             'title': 'string',
             'description': 'string',
@@ -172,6 +177,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_unauthorized_user_create_task(self):
+        # Unauthorized user create new task
         data = {
             'title': 'string',
             'description': 'string',
@@ -184,6 +190,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_simple_user_completed_list_task(self):
+        # Simple user get list of all completed tasks
         response = self.client.get(
             path='/tasks/tasks/completed_task/',
             **auth(self.simple_user)
@@ -191,6 +198,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_admin_user_completed_list_task(self):
+        # Admin user get list of all completed tasks
         response = self.client.get(
             path='/tasks/tasks/completed_task/',
             **auth(self.admin_user)
@@ -198,12 +206,14 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_unauthorized_user_completed_list_task(self):
+        # Unauthorized user get list of all completed tasks
         response = self.client.get(
             path='/tasks/tasks/completed_task/'
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_admin_user_my_list_task(self):
+        # Admin user get list of his own tasks
         content = [
             {
                 'id': 1,
@@ -222,6 +232,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(json.loads(response.content), content)
 
     def test_simple_user_my_list_task(self):
+        # Simple user get list of his own tasks
         content = [
             {
                 'id': 3,
@@ -240,12 +251,14 @@ class TaskTestCase(APITestCase):
         self.assertEqual(json.loads(response.content), content)
 
     def test_unauthorized_user_my_list_task(self):
+        # Unauthorized user get list of his own tasks
         response = self.client.get(
             path='/tasks/tasks/my_task/'
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_simple_user_detail_task(self):
+        # Simple user get task detail
         task_id: int = 1
         content = {
             'id': 1,
@@ -262,6 +275,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(json.loads(response.content), content)
 
     def test_admin_user_detail_task(self):
+        # Admin user get task detail
         task_id: int = 3
         response = self.client.get(
             path=f'/tasks/tasks/{task_id}/',
@@ -274,6 +288,7 @@ class TaskTestCase(APITestCase):
         )
 
     def test_unauthorized_user_detail_task(self):
+        # Unauthorized user get task detail
         task_id: int = 1
         response = self.client.get(
             path=f'/tasks/tasks/{task_id}/'
@@ -281,6 +296,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_simple_user_delete_task(self):
+        # Simple user delete task
         task_id: int = 1
         response = self.client.delete(
             path=f'/tasks/tasks/{task_id}/',
@@ -289,6 +305,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_admin_user_delete_task(self):
+        # Admin user delete
         task_id: int = 1
         response = self.client.delete(
             path=f'/tasks/tasks/{task_id}/',
@@ -297,6 +314,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_unauthorized_user_delete_task(self):
+        # Unauthorized user delete task
         task_id: int = 1
         response = self.client.delete(
             path=f'/tasks/tasks/{task_id}/'
@@ -304,6 +322,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_simple_user_list_comment(self):
+        # Simple user get list of comments by task id
         task_id: int = 1
         response = self.client.get(
             f'/tasks/tasks/{task_id}/comments/',
@@ -312,6 +331,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_admin_user_list_comment(self):
+        # Admin user get list of comments by task id
         task_id: int = 4
         response = self.client.get(
             f'/tasks/tasks/{task_id}/comments/',
@@ -320,6 +340,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_unauthorized_user_list_comment(self):
+        # Unauthorized user get list of comments by task id
         task_id: int = 1
         response = self.client.get(
             f'/tasks/tasks/{task_id}/comments/'
@@ -327,6 +348,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_simple_user_create_comment(self):
+        # Simple user create new comment
         task_id: int = 1
         data = {
             'text': 'test_text#1'
@@ -343,6 +365,7 @@ class TaskTestCase(APITestCase):
         )
 
     def test_admin_user_create_comment(self):
+        # Admin user create new comment
         task_id: int = 4
         data = {
             'text': 'test_text#4'
@@ -359,6 +382,7 @@ class TaskTestCase(APITestCase):
         )
 
     def test_unauthorized_user_create_comment(self):
+        # Unauthorized user create new comment
         task_id: int = 1
         data = {
             'text': 'test_text'
@@ -370,6 +394,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_simple_user_list_task_timelog(self):
+        # Simple user get list of all time logs by task id
         task_id: int = 4
         response = self.client.get(
             f'/tasks/tasks/{task_id}/task_timelogs/',
@@ -388,6 +413,7 @@ class TaskTestCase(APITestCase):
         )
 
     def test_admin_user_list_task_timelog(self):
+        # Admin user get list of all time logs by task id
         task_id: int = 2
         response = self.client.get(
             f'/tasks/tasks/{task_id}/task_timelogs/',
@@ -406,6 +432,7 @@ class TaskTestCase(APITestCase):
         )
 
     def test_unauthorized_user_list_task_timelog(self):
+        # Unauthorized user get list of all time logs by task id
         task_id: int = 3
         response = self.client.get(
             f'/tasks/tasks/{task_id}/task_timelogs/',
@@ -413,6 +440,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_simple_user_create_timelog(self):
+        # Simple user create time log
         task_id: int = 1
         data = {
             "started_at": datetime.now(),
@@ -426,6 +454,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_admin_user_create_timelog(self):
+        # Admin user create time log
         task_id: int = 4
         data = {
             "started_at": datetime.now(),
@@ -439,6 +468,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_unauthorized_user_create_timelog(self):
+        # Unauthorized user create time log
         task_id: int = 4
         data = {
             "started_at": datetime.now(),
@@ -451,6 +481,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_simple_user_start_timer_timelog(self):
+        # Simple user start timer to create time log
         task_id: int = 1
         response = self.client.get(
             f'/tasks/tasks/{task_id}/task_timelogs/start_timer/',
@@ -459,6 +490,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_admin_user_start_timer_timelog(self):
+        # Admin user start timer to create time log
         task_id: int = 1
         response = self.client.get(
             f'/tasks/tasks/{task_id}/task_timelogs/start_timer/',
@@ -467,6 +499,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_unauthorized_user_start_timer_timelog(self):
+        # Unauthorized user start timer to create time log
         task_id: int = 1
         response = self.client.get(
             f'/tasks/tasks/{task_id}/task_timelogs/start_timer/',
@@ -474,6 +507,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_simple_user_stop_timer_timelog(self):
+        # Simple user stop timer to create time log
         TimeLog.objects.create(
             task_id=1,
             user=self.simple_user,
@@ -488,6 +522,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_admin_user_stop_timer_timelog(self):
+        # Admin user stop timer to create time log
         TimeLog.objects.create(
             task_id=1,
             user=self.admin_user,
@@ -502,6 +537,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_unauthorized_user_stop_timer_timelog(self):
+        # Unauthorized user stop timer to create time log
         task_id: int = 1
         response = self.client.get(
             f'/tasks/tasks/{task_id}/task_timelogs/stop_timer/',
@@ -509,6 +545,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_simple_user_list_timelog(self):
+        # Simple user list all time logs
         response = self.client.get(
             f'/tasks/timelogs/',
             **auth(self.simple_user)
@@ -516,6 +553,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_admin_user_list_timelog(self):
+        # Admin user list all time logs
         response = self.client.get(
             f'/tasks/timelogs/',
             **auth(self.admin_user)
@@ -523,12 +561,14 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_unauthorized_user_list_timelog(self):
+        # Unauthorized user list all time logs
         response = self.client.get(
             f'/tasks/timelogs/',
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_simple_user_list_month_timelog(self):
+        # Simple user get list all time logs for month
         response = self.client.get(
             f'/tasks/timelogs/time_logs_month/',
             **auth(self.simple_user)
@@ -536,6 +576,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_admin_user_list_month_timelog(self):
+        # Admin user get list all time logs for month
         response = self.client.get(
             f'/tasks/timelogs/time_logs_month/',
             **auth(self.admin_user)
@@ -543,12 +584,14 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_unauthorized_user_list_month_timelog(self):
+        # Unauthorized user get list all time logs for month
         response = self.client.get(
             f'/tasks/timelogs/time_logs_month/',
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_simple_user_assign_task(self):
+        # Simple user assign task to another user
         user_id: int = 1
         task_id: int = 1
         data = {
@@ -566,6 +609,7 @@ class TaskTestCase(APITestCase):
         )
 
     def test_admin_user_assign_task(self):
+        # Admin user assign task to another user
         user_id: int = 2
         task_id: int = 3
         data = {
@@ -583,6 +627,7 @@ class TaskTestCase(APITestCase):
         )
 
     def test_unauthorized_user_assign_task(self):
+        # Unauthorized user assign task to another user
         task_id: int = 1
         data = {
             'assigned_to': 2
@@ -594,6 +639,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_simple_user_update_status_task(self):
+        # Simple user update task status to True
         task_id: int = 3
         response = self.client.get(
             f'/tasks/tasks/{task_id}/update_task_status/',
@@ -606,6 +652,7 @@ class TaskTestCase(APITestCase):
         )
 
     def test_admin_user_update_status_task(self):
+        # Admin user update task status to True
         task_id: int = 4
         response = self.client.get(
             f'/tasks/tasks/{task_id}/update_task_status/',
@@ -618,6 +665,7 @@ class TaskTestCase(APITestCase):
         )
 
     def test_unauthorized_user_update_status_task(self):
+        # Unauthorized user update task status to True
         task_id: int = 4
         response = self.client.get(
             f'/tasks/tasks/{task_id}/update_task_status/'
