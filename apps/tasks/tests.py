@@ -76,55 +76,6 @@ class TaskTestCase(APITestCase):
                  )
         ])
 
-        self.comment = Comment.objects.bulk_create([
-            Comment(
-                text='TEXT#1',
-                task_id=1,
-                assigned_to=self.admin_user
-            ),
-            Comment(
-                text='TEXT#2',
-                task_id=2,
-                assigned_to=self.admin_user
-            ),
-            Comment(
-                text='TEXT#3',
-                task_id=3,
-                assigned_to=self.simple_user
-            ),
-            Comment(
-                text='TEXT#4',
-                task_id=3,
-                assigned_to=self.simple_user
-            )
-        ])
-        self.time_log = TimeLog.objects.bulk_create([
-            TimeLog(
-                task_id=1,
-                user=self.admin_user,
-                started_at=datetime.now(),
-                duration=timedelta(minutes=10)
-            ),
-            TimeLog(
-                task_id=2,
-                user=self.admin_user,
-                started_at=datetime.now(),
-                duration=timedelta(minutes=10)
-            ),
-            TimeLog(
-                task_id=3,
-                user=self.simple_user,
-                started_at=datetime.now(),
-                duration=timedelta(hours=10)
-            ),
-            TimeLog(
-                task_id=4,
-                user=self.simple_user,
-                started_at=datetime.now(),
-                duration=timedelta(hours=10)
-            )
-        ])
-
     def test_simple_user_list_task(self):
         # Simple user get list of tasks
         response = self.client.get(
@@ -321,6 +272,140 @@ class TaskTestCase(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def test_simple_user_assign_task(self):
+        # Simple user assign task to another user
+        user_id: int = 1
+        task_id: int = 1
+        data = {
+            'assigned_to': 1
+        }
+        response = self.client.patch(
+            path=f'/tasks/tasks/{task_id}/assign_user/',
+            data=data,
+            **auth(self.simple_user)
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            str(Task.objects.get(id=task_id).assigned_to),
+            User.objects.get(id=user_id).email
+        )
+
+    def test_admin_user_assign_task(self):
+        # Admin user assign task to another user
+        user_id: int = 2
+        task_id: int = 3
+        data = {
+            'assigned_to': 2
+        }
+        response = self.client.patch(
+            path=f'/tasks/tasks/{task_id}/assign_user/',
+            data=data,
+            **auth(self.admin_user)
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            str(Task.objects.get(id=task_id).assigned_to),
+            User.objects.get(id=user_id).email
+        )
+
+    def test_unauthorized_user_assign_task(self):
+        # Unauthorized user assign task to another user
+        task_id: int = 1
+        data = {
+            'assigned_to': 2
+        }
+        response = self.client.patch(
+            path=f'/tasks/tasks/{task_id}/assign_user/',
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_simple_user_update_status_task(self):
+        # Simple user update task status to True
+        task_id: int = 3
+        response = self.client.get(
+            f'/tasks/tasks/{task_id}/update_task_status/',
+            **auth(self.simple_user)
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            Task.objects.get(id=task_id).status,
+            True
+        )
+
+    def test_admin_user_update_status_task(self):
+        # Admin user update task status to True
+        task_id: int = 4
+        response = self.client.get(
+            f'/tasks/tasks/{task_id}/update_task_status/',
+            **auth(self.admin_user)
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            Task.objects.get(id=task_id).status,
+            True
+        )
+
+    def test_unauthorized_user_update_status_task(self):
+        # Unauthorized user update task status to True
+        task_id: int = 4
+        response = self.client.get(
+            f'/tasks/tasks/{task_id}/update_task_status/'
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class CommentTestCase(APITestCase):
+    def setUp(self) -> None:
+        self.simple_user = User.objects.create(
+            email='simple@test.com',
+            first_name='simple_first_name',
+            last_name='simple_last_name',
+            username='simple@test.com',
+            is_superuser=False,
+            is_staff=False,
+        )
+        self.simple_user_password = 'simple'
+        self.simple_user.set_password(self.simple_user_password)
+        self.simple_user.save()
+        self.simple_user_refresh = RefreshToken.for_user(self.simple_user)
+
+        self.admin_user = User.objects.create(
+            email='admin@test.com',
+            first_name='admin_first_name',
+            last_name='admin_last_name',
+            username='admin@test.com',
+            is_superuser=True,
+            is_staff=True,
+        )
+        self.admin_user_password = 'admin'
+        self.admin_user.set_password(self.admin_user_password)
+        self.admin_user.save()
+        self.admin_user_refresh = RefreshToken.for_user(self.admin_user)
+
+        self.comment = Comment.objects.bulk_create([
+            Comment(
+                text='TEXT#1',
+                task_id=1,
+                assigned_to=self.admin_user
+            ),
+            Comment(
+                text='TEXT#2',
+                task_id=2,
+                assigned_to=self.admin_user
+            ),
+            Comment(
+                text='TEXT#3',
+                task_id=3,
+                assigned_to=self.simple_user
+            ),
+            Comment(
+                text='TEXT#4',
+                task_id=3,
+                assigned_to=self.simple_user
+            )
+        ])
+
     def test_simple_user_list_comment(self):
         # Simple user get list of comments by task id
         task_id: int = 1
@@ -392,6 +477,62 @@ class TaskTestCase(APITestCase):
             data=data
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class TimeLogTestCase(APITestCase):
+    def setUp(self) -> None:
+        self.simple_user = User.objects.create(
+            email='simple@test.com',
+            first_name='simple_first_name',
+            last_name='simple_last_name',
+            username='simple@test.com',
+            is_superuser=False,
+            is_staff=False,
+        )
+        self.simple_user_password = 'simple'
+        self.simple_user.set_password(self.simple_user_password)
+        self.simple_user.save()
+        self.simple_user_refresh = RefreshToken.for_user(self.simple_user)
+
+        self.admin_user = User.objects.create(
+            email='admin@test.com',
+            first_name='admin_first_name',
+            last_name='admin_last_name',
+            username='admin@test.com',
+            is_superuser=True,
+            is_staff=True,
+        )
+        self.admin_user_password = 'admin'
+        self.admin_user.set_password(self.admin_user_password)
+        self.admin_user.save()
+        self.admin_user_refresh = RefreshToken.for_user(self.admin_user)
+
+        self.time_log = TimeLog.objects.bulk_create([
+            TimeLog(
+                task_id=1,
+                user=self.admin_user,
+                started_at=datetime.now(),
+                duration=timedelta(minutes=10)
+            ),
+            TimeLog(
+                task_id=2,
+                user=self.admin_user,
+                started_at=datetime.now(),
+                duration=timedelta(minutes=10)
+            ),
+            TimeLog(
+                task_id=3,
+                user=self.simple_user,
+                started_at=datetime.now(),
+                duration=timedelta(hours=10)
+            ),
+            TimeLog(
+                task_id=4,
+                user=self.simple_user,
+                started_at=datetime.now(),
+                duration=timedelta(hours=10)
+            )
+        ])
 
     def test_simple_user_list_task_timelog(self):
         # Simple user get list of all time logs by task id
@@ -587,87 +728,5 @@ class TaskTestCase(APITestCase):
         # Unauthorized user get list all time logs for month
         response = self.client.get(
             f'/tasks/timelogs/time_logs_month/',
-        )
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-    def test_simple_user_assign_task(self):
-        # Simple user assign task to another user
-        user_id: int = 1
-        task_id: int = 1
-        data = {
-            'assigned_to': 1
-        }
-        response = self.client.patch(
-            path=f'/tasks/tasks/{task_id}/assign_user/',
-            data=data,
-            **auth(self.simple_user)
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            str(Task.objects.get(id=task_id).assigned_to),
-            User.objects.get(id=user_id).email
-        )
-
-    def test_admin_user_assign_task(self):
-        # Admin user assign task to another user
-        user_id: int = 2
-        task_id: int = 3
-        data = {
-            'assigned_to': 2
-        }
-        response = self.client.patch(
-            path=f'/tasks/tasks/{task_id}/assign_user/',
-            data=data,
-            **auth(self.admin_user)
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            str(Task.objects.get(id=task_id).assigned_to),
-            User.objects.get(id=user_id).email
-        )
-
-    def test_unauthorized_user_assign_task(self):
-        # Unauthorized user assign task to another user
-        task_id: int = 1
-        data = {
-            'assigned_to': 2
-        }
-        response = self.client.patch(
-            path=f'/tasks/tasks/{task_id}/assign_user/',
-            data=data
-        )
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-    def test_simple_user_update_status_task(self):
-        # Simple user update task status to True
-        task_id: int = 3
-        response = self.client.get(
-            f'/tasks/tasks/{task_id}/update_task_status/',
-            **auth(self.simple_user)
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            Task.objects.get(id=task_id).status,
-            True
-        )
-
-    def test_admin_user_update_status_task(self):
-        # Admin user update task status to True
-        task_id: int = 4
-        response = self.client.get(
-            f'/tasks/tasks/{task_id}/update_task_status/',
-            **auth(self.admin_user)
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            Task.objects.get(id=task_id).status,
-            True
-        )
-
-    def test_unauthorized_user_update_status_task(self):
-        # Unauthorized user update task status to True
-        task_id: int = 4
-        response = self.client.get(
-            f'/tasks/tasks/{task_id}/update_task_status/'
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
