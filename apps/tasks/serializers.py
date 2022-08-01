@@ -9,6 +9,17 @@ from apps.tasks.models import (
     TimeLog
 )
 
+__all__ = [
+    'TaskSerializer',
+    'TaskListSerializer',
+    'TaskAssignNewUserSerializer',
+    'TaskUpdateStatusSerializer',
+    'CommentSerializer',
+    'TimeLogSerializer',
+    'TimeLogCreateSerializer',
+    'TimeLogUserDetailSerializer'
+]
+
 
 class TaskSerializer(ModelSerializer):
     class Meta:

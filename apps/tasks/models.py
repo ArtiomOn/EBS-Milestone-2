@@ -5,6 +5,12 @@ from datetime import datetime
 
 User = get_user_model()
 
+__all__ = [
+    'Task',
+    'Comment',
+    'TimeLog'
+]
+
 
 class Task(models.Model):
     title = models.CharField(

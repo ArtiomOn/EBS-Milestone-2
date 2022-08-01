@@ -3,6 +3,11 @@ from django.contrib.auth.models import UserManager, AbstractUser
 from django.utils.translation import gettext_lazy as _
 from django.db.models import EmailField
 
+__all__ = [
+    'CustomUserManager',
+    'CustomUser'
+]
+
 
 class CustomUserManager(UserManager):
 
@@ -19,7 +24,6 @@ class CustomUserManager(UserManager):
 
 
 class CustomUser(AbstractUser):
-
     objects = CustomUserManager()
     email = EmailField(_('email address'), blank=False, unique=True)
 
