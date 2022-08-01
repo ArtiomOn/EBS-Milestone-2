@@ -114,7 +114,18 @@ class TaskViewSet(
             subject='commented task is completed',
             recipient_list=list(data)
         )
+        self.check_task_status_send_email()
         return Response(status=status.HTTP_200_OK)
+
+    def check_task_status_send_email(self):
+        # Send email to all people that have status False on their task
+        user_email = set(Task.objects.select_related(
+            'assigned_to').filter(status=False).values_list('assigned_to__email', flat=True))
+        self.send_email_task(
+            message='Your task is not completed',
+            subject='Your task is not completed',
+            recipient_list=list(user_email)
+        )
 
     @classmethod
     def send_email_task(cls, message, subject, recipient_list):
@@ -146,13 +157,13 @@ class TaskCommentViewSet(
         task_id = self.kwargs.get('task__pk')
         serializer.save(assigned_to=self.request.user, task_id=task_id)
 
-        user_email = ''.join(list(Task.objects.select_related(
-            'assigned_to').filter(id=task_id).values_list('assigned_to__email', flat=True)))
+        user_email = Task.objects.select_related(
+            'assigned_to').filter(id=task_id).values_list('assigned_to__email', flat=True)
 
         self.send_email_comment(
             message=f'You task with id:{task_id} is commented',
             subject='Your task is commented',
-            recipient_list=user_email
+            recipient_list=list(user_email)
         )
 
     @classmethod
@@ -161,7 +172,7 @@ class TaskCommentViewSet(
             message=message,
             subject=subject,
             from_email=settings.EMAIL_HOST_USER,
-            recipient_list=[recipient_list],
+            recipient_list=recipient_list,
             fail_silently=False
         )
 
