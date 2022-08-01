@@ -1,21 +1,21 @@
+from datetime import datetime, timedelta
+
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.db.models import Sum
-
 from rest_framework import status, filters
 from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet
-from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.mixins import (
     ListModelMixin,
     RetrieveModelMixin,
     CreateModelMixin,
     DestroyModelMixin,
 )
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
-from config import settings
 from apps.tasks.filtersets import TaskFilterSet
 from apps.tasks.models import (
     Task,
@@ -32,8 +32,7 @@ from apps.tasks.serializers import (
     TimeLogCreateSerializer,
     TimeLogUserDetailSerializer,
 )
-
-from datetime import datetime, timedelta
+from config import settings
 
 User = get_user_model()
 
@@ -98,9 +97,7 @@ class TaskViewSet(
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        instance.status = True
-        instance.save()
+        serializer.save(status=True)
 
         comments = Comment.objects.all().filter(task_id=instance.id).values_list('assigned_to', flat=True)
         users_email = User.objects.filter(id__in=comments.all()).values_list('email', flat=True)

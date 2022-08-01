@@ -1,13 +1,14 @@
 from django.contrib.auth import get_user_model
 
-from rest_framework.mixins import ListModelMixin
-from rest_framework.decorators import action
 from rest_framework import status
+from rest_framework.decorators import action
+from rest_framework.generics import get_object_or_404
+from rest_framework.mixins import ListModelMixin
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.viewsets import GenericViewSet
 
 from apps.users.serializers import (
     UserSerializer,
@@ -57,10 +58,8 @@ class UserViewSet(
     def login(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=False)
+        user = get_object_or_404(User, email=serializer.data['email'])
 
-        user = User.objects.get(
-            email=serializer.data['email']
-        )
         if user.check_password(serializer.data['password']):
             refresh = RefreshToken.for_user(user)
 
@@ -68,5 +67,5 @@ class UserViewSet(
                 'refresh': str(refresh),
                 'access': str(refresh.access_token)
             })
-        else:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        return Response(status=status.HTTP_404_NOT_FOUND)
