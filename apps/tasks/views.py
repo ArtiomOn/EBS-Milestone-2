@@ -36,6 +36,13 @@ from config import settings
 
 User = get_user_model()
 
+__all__ = [
+    'TaskViewSet',
+    'TaskCommentViewSet',
+    'TaskTimeLogViewSet',
+    'TimeLogViewSet'
+]
+
 
 class TaskViewSet(
     ListModelMixin,
@@ -99,12 +106,13 @@ class TaskViewSet(
         serializer.is_valid(raise_exception=True)
         serializer.save(status=True)
 
-        comments = Comment.objects.all().filter(task_id=instance.id).values_list('assigned_to', flat=True)
-        users_email = User.objects.filter(id__in=comments.all()).values_list('email', flat=True)
+        data = set(Comment.objects.select_related(
+            'task__assigned_to').filter(task_id=instance.id).values_list('assigned_to__email', flat=True))
+
         self.send_email_task(
             message='commented task is completed',
             subject='commented task is completed',
-            recipient_list=list(users_email)
+            recipient_list=list(data)
         )
         return Response(status=status.HTTP_200_OK)
 
@@ -138,8 +146,9 @@ class TaskCommentViewSet(
         task_id = self.kwargs.get('task__pk')
         serializer.save(assigned_to=self.request.user, task_id=task_id)
 
-        user_task = Task.objects.get(id=task_id).assigned_to_id
-        user_email = User.objects.get(id=user_task).email
+        user_email = ''.join(list(Task.objects.select_related(
+            'assigned_to').filter(id=task_id).values_list('assigned_to__email', flat=True)))
+
         self.send_email_comment(
             message=f'You task with id:{task_id} is commented',
             subject='Your task is commented',
