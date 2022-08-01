@@ -18,6 +18,10 @@ from apps.users.serializers import (
 
 User = get_user_model()
 
+__all__ = [
+    'UserViewSet'
+]
+
 
 class UserViewSet(
     ListModelMixin,
