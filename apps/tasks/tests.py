@@ -163,32 +163,21 @@ class TaskTestCase(APITestCase):
 
     def test_admin_user_my_list_task(self):
         # Admin user get list of his own tasks
-        content = [
-            {
-                'id': 1,
-                'title': '#1'
-            },
-            {
-                'id': 2,
-                'title': '#2'
-            }
-        ]
         response = self.client.get(
             path='/tasks/tasks/my_task/',
             **auth(self.admin_user)
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, content)
 
     def test_simple_user_my_list_task(self):
         # Simple user get list of his own tasks
         content = [
             {
-                'id': 3,
+                'id': Task.objects.get(title='#3').id,
                 'title': '#3'
             },
             {
-                'id': 4,
+                'id': Task.objects.get(title='#4').id,
                 'title': '#4'
             }
         ]
@@ -208,13 +197,14 @@ class TaskTestCase(APITestCase):
 
     def test_simple_user_detail_task(self):
         # Simple user get task detail
-        task_id: int = 1
+        user_id: int = User.objects.get(email='admin@test.com').id
+        task_id: int = Task.objects.first().id
         content = {
-            'id': 1,
+            'id': task_id,
             'title': '#1',
             'description': '#1',
             'status': True,
-            'assigned_to': 2
+            'assigned_to': user_id
         }
         response = self.client.get(
             path=f'/tasks/tasks/{task_id}/',
@@ -225,7 +215,7 @@ class TaskTestCase(APITestCase):
 
     def test_admin_user_detail_task(self):
         # Admin user get task detail
-        task_id: int = 3
+        task_id: int = Task.objects.first().id
         response = self.client.get(
             path=f'/tasks/tasks/{task_id}/',
             **auth(self.admin_user)
@@ -238,7 +228,7 @@ class TaskTestCase(APITestCase):
 
     def test_unauthorized_user_detail_task(self):
         # Unauthorized user get task detail
-        task_id: int = 1
+        task_id: int = Task.objects.first().id
         response = self.client.get(
             path=f'/tasks/tasks/{task_id}/'
         )
@@ -246,7 +236,8 @@ class TaskTestCase(APITestCase):
 
     def test_simple_user_delete_task(self):
         # Simple user delete task
-        task_id: int = 1
+        task_id: int = Task.objects.first().id
+
         response = self.client.delete(
             path=f'/tasks/tasks/{task_id}/',
             **auth(self.simple_user)
@@ -255,7 +246,7 @@ class TaskTestCase(APITestCase):
 
     def test_admin_user_delete_task(self):
         # Admin user delete task
-        task_id: int = 1
+        task_id: int = Task.objects.first().id
         response = self.client.delete(
             path=f'/tasks/tasks/{task_id}/',
             **auth(self.admin_user)
@@ -264,7 +255,7 @@ class TaskTestCase(APITestCase):
 
     def test_unauthorized_user_delete_task(self):
         # Unauthorized user delete task
-        task_id: int = 1
+        task_id: int = Task.objects.first().id
         response = self.client.delete(
             path=f'/tasks/tasks/{task_id}/'
         )
@@ -272,10 +263,11 @@ class TaskTestCase(APITestCase):
 
     def test_simple_user_assign_task(self):
         # Simple user assign task to another user
-        user_id: int = 1
-        task_id: int = 1
+        user_id: int = User.objects.first().id
+        task_id: int = Task.objects.first().id
+
         data = {
-            'assigned_to': 1
+            'assigned_to': user_id
         }
         response = self.client.patch(
             path=f'/tasks/tasks/{task_id}/assign_user/',
@@ -290,10 +282,11 @@ class TaskTestCase(APITestCase):
 
     def test_admin_user_assign_task(self):
         # Admin user assign task to another user
-        user_id: int = 2
-        task_id: int = 3
+        user_id: int = User.objects.first().id
+        task_id: int = Task.objects.first().id
+
         data = {
-            'assigned_to': 2
+            'assigned_to': user_id
         }
         response = self.client.patch(
             path=f'/tasks/tasks/{task_id}/assign_user/',
@@ -308,7 +301,7 @@ class TaskTestCase(APITestCase):
 
     def test_unauthorized_user_assign_task(self):
         # Unauthorized user assign task to another user
-        task_id: int = 1
+        task_id: int = Task.objects.first().id
         data = {
             'assigned_to': 2
         }
@@ -320,7 +313,7 @@ class TaskTestCase(APITestCase):
 
     def test_simple_user_update_status_task(self):
         # Simple user update task status to True
-        task_id: int = 3
+        task_id: int = Task.objects.first().id
         response = self.client.get(
             f'/tasks/tasks/{task_id}/update_task_status/',
             **auth(self.simple_user)
@@ -333,7 +326,7 @@ class TaskTestCase(APITestCase):
 
     def test_admin_user_update_status_task(self):
         # Admin user update task status to True
-        task_id: int = 4
+        task_id: int = Task.objects.last().id
         response = self.client.get(
             f'/tasks/tasks/{task_id}/update_task_status/',
             **auth(self.admin_user)
@@ -346,7 +339,7 @@ class TaskTestCase(APITestCase):
 
     def test_unauthorized_user_update_status_task(self):
         # Unauthorized user update task status to True
-        task_id: int = 4
+        task_id: int = Task.objects.first().id
         response = self.client.get(
             f'/tasks/tasks/{task_id}/update_task_status/'
         )
@@ -381,29 +374,6 @@ class CommentTestCase(APITestCase):
         self.admin_user.save()
         self.admin_user_refresh = RefreshToken.for_user(self.admin_user)
 
-        self.comment = Comment.objects.bulk_create([
-            Comment(
-                text='TEXT#1',
-                task_id=1,
-                assigned_to=self.admin_user
-            ),
-            Comment(
-                text='TEXT#2',
-                task_id=2,
-                assigned_to=self.admin_user
-            ),
-            Comment(
-                text='TEXT#3',
-                task_id=3,
-                assigned_to=self.simple_user
-            ),
-            Comment(
-                text='TEXT#4',
-                task_id=3,
-                assigned_to=self.simple_user
-            )
-        ])
-
         self.task = Task.objects.bulk_create([
             Task(title='#1',
                  description='#1',
@@ -427,9 +397,32 @@ class CommentTestCase(APITestCase):
                  )
         ])
 
+        self.comment = Comment.objects.bulk_create([
+            Comment(
+                text='TEXT#1',
+                task_id=Task.objects.first().id,
+                assigned_to=self.admin_user
+            ),
+            Comment(
+                text='TEXT#2',
+                task_id=Task.objects.first().id,
+                assigned_to=self.admin_user
+            ),
+            Comment(
+                text='TEXT#3',
+                task_id=Task.objects.last().id,
+                assigned_to=self.simple_user
+            ),
+            Comment(
+                text='TEXT#4',
+                task_id=Task.objects.last().id,
+                assigned_to=self.simple_user
+            )
+        ])
+
     def test_simple_user_list_comment(self):
         # Simple user get list of comments by task id
-        task_id: int = 1
+        task_id: int = Task.objects.first().id
         response = self.client.get(
             f'/tasks/tasks/{task_id}/comments/',
             **auth(self.simple_user)
@@ -438,16 +431,16 @@ class CommentTestCase(APITestCase):
 
     def test_admin_user_list_comment(self):
         # Admin user get list of comments by task id
-        task_id: int = 4
+        task_id: int = Task.objects.last().id
         response = self.client.get(
-            f'/tasks/tasks/{task_id}/comments/',
+            f'/tasks/tasks/1/comments/',
             **auth(self.admin_user)
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_unauthorized_user_list_comment(self):
         # Unauthorized user get list of comments by task id
-        task_id: int = 1
+        task_id: int = Task.objects.first().id
         response = self.client.get(
             f'/tasks/tasks/{task_id}/comments/'
         )
@@ -455,7 +448,7 @@ class CommentTestCase(APITestCase):
 
     def test_simple_user_create_comment(self):
         # Simple user create new comment
-        task_id: int = 1
+        task_id: int = Task.objects.first().id
         data = {
             'text': 'test_text#1'
         }
@@ -472,7 +465,7 @@ class CommentTestCase(APITestCase):
 
     def test_admin_user_create_comment(self):
         # Admin user create new comment
-        task_id: int = 4
+        task_id: int = Task.objects.last().id
         data = {
             'text': 'test_text#4'
         }
@@ -489,7 +482,7 @@ class CommentTestCase(APITestCase):
 
     def test_unauthorized_user_create_comment(self):
         # Unauthorized user create new comment
-        task_id: int = 1
+        task_id: int = Task.objects.first().id
         data = {
             'text': 'test_text'
         }
@@ -528,33 +521,6 @@ class TimeLogTestCase(APITestCase):
         self.admin_user.save()
         self.admin_user_refresh = RefreshToken.for_user(self.admin_user)
 
-        self.time_log = TimeLog.objects.bulk_create([
-            TimeLog(
-                task_id=1,
-                user=self.admin_user,
-                started_at=datetime.now(),
-                duration=timedelta(minutes=10)
-            ),
-            TimeLog(
-                task_id=2,
-                user=self.admin_user,
-                started_at=datetime.now(),
-                duration=timedelta(minutes=10)
-            ),
-            TimeLog(
-                task_id=3,
-                user=self.simple_user,
-                started_at=datetime.now(),
-                duration=timedelta(hours=10)
-            ),
-            TimeLog(
-                task_id=4,
-                user=self.simple_user,
-                started_at=datetime.now(),
-                duration=timedelta(hours=10)
-            )
-        ])
-
         self.task = Task.objects.bulk_create([
             Task(title='#1',
                  description='#1',
@@ -578,9 +544,36 @@ class TimeLogTestCase(APITestCase):
                  )
         ])
 
+        self.time_log = TimeLog.objects.bulk_create([
+            TimeLog(
+                task_id=Task.objects.first().id,
+                user=self.admin_user,
+                started_at=datetime.now(),
+                duration=timedelta(minutes=10)
+            ),
+            TimeLog(
+                task_id=Task.objects.first().id,
+                user=self.admin_user,
+                started_at=datetime.now(),
+                duration=timedelta(minutes=10)
+            ),
+            TimeLog(
+                task_id=Task.objects.last().id,
+                user=self.simple_user,
+                started_at=datetime.now(),
+                duration=timedelta(hours=10)
+            ),
+            TimeLog(
+                task_id=Task.objects.last().id,
+                user=self.simple_user,
+                started_at=datetime.now(),
+                duration=timedelta(hours=10)
+            )
+        ])
+
     def test_simple_user_list_task_timelog(self):
         # Simple user get list of all time logs by task id
-        task_id: int = 4
+        task_id: int = Task.objects.last().id
         response = self.client.get(
             f'/tasks/tasks/{task_id}/task_timelogs/',
             **auth(self.simple_user)
@@ -592,14 +585,14 @@ class TimeLogTestCase(APITestCase):
                 '%H:%M:%S'
             ).minute,
             datetime.strptime(
-                str(TimeLog.objects.get(task_id=task_id).duration),
+                str(TimeLog.objects.filter(task_id=task_id).first().duration),
                 '%H:%M:%S'
             ).minute
         )
 
     def test_admin_user_list_task_timelog(self):
         # Admin user get list of all time logs by task id
-        task_id: int = 2
+        task_id: int = Task.objects.first().id
         response = self.client.get(
             f'/tasks/tasks/{task_id}/task_timelogs/',
             **auth(self.admin_user)
@@ -611,15 +604,14 @@ class TimeLogTestCase(APITestCase):
                 '%H:%M:%S'
             ).minute,
             datetime.strptime(
-                str(TimeLog.objects.get(task_id=task_id).duration),
+                str(TimeLog.objects.filter(task_id=task_id).first().duration),
                 '%H:%M:%S'
             ).minute
         )
 
-
     def test_unauthorized_user_list_task_timelog(self):
         # Unauthorized user get list of all time logs by task id
-        task_id: int = 3
+        task_id: int = Task.objects.last().id
         response = self.client.get(
             f'/tasks/tasks/{task_id}/task_timelogs/',
         )
@@ -627,7 +619,7 @@ class TimeLogTestCase(APITestCase):
 
     def test_simple_user_create_timelog(self):
         # Simple user create time log
-        task_id: int = 1
+        task_id: int = Task.objects.first().id
         data = {
             "started_at": datetime.now(),
             "duration": 10
@@ -641,7 +633,7 @@ class TimeLogTestCase(APITestCase):
 
     def test_admin_user_create_timelog(self):
         # Admin user create time log
-        task_id: int = 4
+        task_id: int = Task.objects.last().id
         data = {
             "started_at": datetime.now(),
             "duration": 10
@@ -655,7 +647,7 @@ class TimeLogTestCase(APITestCase):
 
     def test_unauthorized_user_create_timelog(self):
         # Unauthorized user create time log
-        task_id: int = 4
+        task_id: int = Task.objects.first().id
         data = {
             "started_at": datetime.now(),
             "duration": 10
@@ -668,7 +660,7 @@ class TimeLogTestCase(APITestCase):
 
     def test_simple_user_start_timer_timelog(self):
         # Simple user start timer to create time log
-        task_id: int = 1
+        task_id: int = Task.objects.first().id
         response = self.client.get(
             f'/tasks/tasks/{task_id}/task_timelogs/start_timer/',
             **auth(self.simple_user)
@@ -677,7 +669,7 @@ class TimeLogTestCase(APITestCase):
 
     def test_admin_user_start_timer_timelog(self):
         # Admin user start timer to create time log
-        task_id: int = 1
+        task_id: int = Task.objects.first().id
         response = self.client.get(
             f'/tasks/tasks/{task_id}/task_timelogs/start_timer/',
             **auth(self.admin_user)
@@ -686,7 +678,7 @@ class TimeLogTestCase(APITestCase):
 
     def test_unauthorized_user_start_timer_timelog(self):
         # Unauthorized user start timer to create time log
-        task_id: int = 1
+        task_id: int = Task.objects.first().id
         response = self.client.get(
             f'/tasks/tasks/{task_id}/task_timelogs/start_timer/',
         )
@@ -695,12 +687,12 @@ class TimeLogTestCase(APITestCase):
     def test_simple_user_stop_timer_timelog(self):
         # Simple user stop timer to create time log
         TimeLog.objects.create(
-            task_id=1,
+            task_id=Task.objects.first().id,
             user=self.simple_user,
             started_at=datetime.now(),
             duration=None
         )
-        task_id: int = 1
+        task_id: int = Task.objects.first().id
         response = self.client.get(
             f'/tasks/tasks/{task_id}/task_timelogs/stop_timer/',
             **auth(self.simple_user)
@@ -710,12 +702,12 @@ class TimeLogTestCase(APITestCase):
     def test_admin_user_stop_timer_timelog(self):
         # Admin user stop timer to create time log
         TimeLog.objects.create(
-            task_id=1,
+            task_id=Task.objects.first().id,
             user=self.admin_user,
             started_at=datetime.now(),
             duration=None
         )
-        task_id: int = 1
+        task_id: int = Task.objects.first().id
         response = self.client.get(
             f'/tasks/tasks/{task_id}/task_timelogs/stop_timer/',
             **auth(self.admin_user)
@@ -724,7 +716,7 @@ class TimeLogTestCase(APITestCase):
 
     def test_unauthorized_user_stop_timer_timelog(self):
         # Unauthorized user stop timer to create time log
-        task_id: int = 1
+        task_id: int = Task.objects.first().id
         response = self.client.get(
             f'/tasks/tasks/{task_id}/task_timelogs/stop_timer/',
         )
