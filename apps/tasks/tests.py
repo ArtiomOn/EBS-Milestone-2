@@ -1,5 +1,3 @@
-import json
-
 from django.contrib.auth import get_user_model
 
 from rest_framework import status
@@ -180,7 +178,7 @@ class TaskTestCase(APITestCase):
             **auth(self.admin_user)
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(json.loads(response.content), content)
+        self.assertEqual(response.data, content)
 
     def test_simple_user_my_list_task(self):
         # Simple user get list of his own tasks
@@ -199,7 +197,7 @@ class TaskTestCase(APITestCase):
             **auth(self.simple_user)
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(json.loads(response.content), content)
+        self.assertEqual(response.data, content)
 
     def test_unauthorized_user_my_list_task(self):
         # Unauthorized user get list of his own tasks
@@ -223,7 +221,7 @@ class TaskTestCase(APITestCase):
             **auth(self.simple_user)
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(json.loads(response.content), content)
+        self.assertEqual(response.data, content)
 
     def test_admin_user_detail_task(self):
         # Admin user get task detail
@@ -234,7 +232,7 @@ class TaskTestCase(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            json.loads(response.content).get('title'),
+            response.data.get('title'),
             Task.objects.get(id=task_id).title
         )
 
@@ -468,7 +466,7 @@ class CommentTestCase(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(
-            json.loads(response.content).get('text'),
+            response.data.get('text'),
             data.get('text')
         )
 
@@ -485,7 +483,7 @@ class CommentTestCase(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(
-            json.loads(response.content).get('text'),
+            response.data.get('text'),
             data.get('text')
         )
 
@@ -590,7 +588,7 @@ class TimeLogTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             datetime.strptime(
-                json.loads(response.content)[0].get('duration'),
+                response.data[0].get('duration'),
                 '%H:%M:%S'
             ).minute,
             datetime.strptime(
@@ -609,7 +607,7 @@ class TimeLogTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             datetime.strptime(
-                json.loads(response.content)[0].get('duration'),
+                response.data[0].get('duration'),
                 '%H:%M:%S'
             ).minute,
             datetime.strptime(
@@ -617,6 +615,7 @@ class TimeLogTestCase(APITestCase):
                 '%H:%M:%S'
             ).minute
         )
+
 
     def test_unauthorized_user_list_task_timelog(self):
         # Unauthorized user get list of all time logs by task id
