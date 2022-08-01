@@ -39,12 +39,14 @@ INSTALLED_APPS = [
     'drf_yasg',
     'django_nose',
     'django_extensions',
+    'debug_toolbar',
 
     'apps.common',
     'apps.users',
     'apps.tasks',
 ]
 MIDDLEWARE = [
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -53,7 +55,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'apps.common.middlewares.ApiMiddleware',
+    'apps.common.middlewares.ApiMiddleware'
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -76,6 +78,7 @@ TEMPLATES = [
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
+DEBUG_TOOLBAR_PATCH_SETTINGS = False
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
@@ -93,8 +96,6 @@ CORS_ALLOW_HEADERS = (
     'token',
     'cache-control'
 )
-
-
 
 REST_FRAMEWORK = {
     'DATETIME_FORMAT': "%Y-%m-%dT%H:%M:%SZ",
@@ -123,6 +124,8 @@ SWAGGER_SETTINGS = {
         }
     }
 }
+
+INTERNAL_IPS = ("127.0.0.1", "172.17.0.1")
 
 FIXTURE_DIRS = (
     'fixtures/',
@@ -244,5 +247,3 @@ SIMPLE_JWT = {
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
