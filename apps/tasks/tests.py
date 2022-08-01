@@ -256,7 +256,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_admin_user_delete_task(self):
-        # Admin user delete
+        # Admin user delete task
         task_id: int = 1
         response = self.client.delete(
             path=f'/tasks/tasks/{task_id}/',
@@ -406,6 +406,29 @@ class CommentTestCase(APITestCase):
             )
         ])
 
+        self.task = Task.objects.bulk_create([
+            Task(title='#1',
+                 description='#1',
+                 assigned_to=self.admin_user,
+                 status=True
+                 ),
+            Task(title='#2',
+                 description='#2',
+                 assigned_to=self.admin_user,
+                 status=True
+                 ),
+            Task(title='#3',
+                 description='#3',
+                 assigned_to=self.simple_user,
+                 status=False
+                 ),
+            Task(title='#4',
+                 description='#4',
+                 assigned_to=self.simple_user,
+                 status=False
+                 )
+        ])
+
     def test_simple_user_list_comment(self):
         # Simple user get list of comments by task id
         task_id: int = 1
@@ -532,6 +555,29 @@ class TimeLogTestCase(APITestCase):
                 started_at=datetime.now(),
                 duration=timedelta(hours=10)
             )
+        ])
+
+        self.task = Task.objects.bulk_create([
+            Task(title='#1',
+                 description='#1',
+                 assigned_to=self.admin_user,
+                 status=True
+                 ),
+            Task(title='#2',
+                 description='#2',
+                 assigned_to=self.admin_user,
+                 status=True
+                 ),
+            Task(title='#3',
+                 description='#3',
+                 assigned_to=self.simple_user,
+                 status=False
+                 ),
+            Task(title='#4',
+                 description='#4',
+                 assigned_to=self.simple_user,
+                 status=False
+                 )
         ])
 
     def test_simple_user_list_task_timelog(self):
