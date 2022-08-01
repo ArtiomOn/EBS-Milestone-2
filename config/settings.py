@@ -74,6 +74,9 @@ TEMPLATES = [
     },
 ]
 
+AUTH_USER_MODEL = 'users.CustomUser'
+
+
 WSGI_APPLICATION = 'config.wsgi.application'
 
 CORS_ORIGIN_ALLOW_ALL = True
@@ -91,7 +94,7 @@ CORS_ALLOW_HEADERS = (
     'cache-control'
 )
 
-AUTH_USER_MODEL = 'users.CustomUser'
+
 
 REST_FRAMEWORK = {
     'DATETIME_FORMAT': "%Y-%m-%dT%H:%M:%SZ",
@@ -241,3 +244,5 @@ SIMPLE_JWT = {
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+

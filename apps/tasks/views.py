@@ -86,8 +86,11 @@ class TaskViewSet(
         serializer.save()
         instance.assigned_to = serializer.validated_data['assigned_to']
         user_email = User.objects.get(id=instance.assigned_to.id).email
-        self.send_email_task(message=f'Task with id:{instance.id} is assigned to you',
-                             subject='Task assign to you', recipient_list=[user_email])
+        self.send_email_task(
+            message=f'Task with id:{instance.id} is assigned to you',
+            subject='Task assign to you',
+            recipient_list=[user_email]
+        )
         return Response(status=status.HTTP_200_OK)
 
     @action(methods=['get'], detail=True, url_path='update_task_status', serializer_class=TaskUpdateStatusSerializer)
@@ -101,15 +104,22 @@ class TaskViewSet(
 
         comments = Comment.objects.all().filter(task_id=instance.id).values_list('assigned_to', flat=True)
         users_email = User.objects.filter(id__in=comments.all()).values_list('email', flat=True)
-        self.send_email_task(message='commented task is completed', subject='commented task is completed',
-                             recipient_list=list(users_email))
-
+        self.send_email_task(
+            message='commented task is completed',
+            subject='commented task is completed',
+            recipient_list=list(users_email)
+        )
         return Response(status=status.HTTP_200_OK)
 
     @classmethod
     def send_email_task(cls, message, subject, recipient_list):
-        send_mail(message=message, subject=subject, from_email=settings.EMAIL_HOST_USER,
-                  recipient_list=recipient_list, fail_silently=False)
+        send_mail(
+            message=message,
+            subject=subject,
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=recipient_list,
+            fail_silently=False
+        )
 
 
 class TaskCommentViewSet(
@@ -133,13 +143,21 @@ class TaskCommentViewSet(
 
         user_task = Task.objects.get(id=task_id).assigned_to_id
         user_email = User.objects.get(id=user_task).email
-        self.send_email_comment(message=f'You task with id:{task_id} is commented',
-                                subject='Your task is commented', recipient_list=user_email)
+        self.send_email_comment(
+            message=f'You task with id:{task_id} is commented',
+            subject='Your task is commented',
+            recipient_list=user_email
+        )
 
     @classmethod
     def send_email_comment(cls, message, subject, recipient_list):
-        send_mail(message=message, subject=subject, from_email=settings.EMAIL_HOST_USER,
-                  recipient_list=[recipient_list], fail_silently=False)
+        send_mail(
+            message=message,
+            subject=subject,
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[recipient_list],
+            fail_silently=False
+        )
 
 
 class TaskTimeLogViewSet(
