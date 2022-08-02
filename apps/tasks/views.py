@@ -106,24 +106,25 @@ class TaskViewSet(
         serializer.is_valid(raise_exception=True)
         serializer.save(status=True)
 
-        data = set(Comment.objects.select_related(
+        user_email = set(Comment.objects.select_related(
             'task__assigned_to').filter(task_id=instance.id).values_list('assigned_to__email', flat=True))
-
-        self.send_email_task(
-            message='commented task is completed',
-            subject='commented task is completed',
-            recipient_list=list(data)
-        )
+        if user_email:
+            self.send_email_task(
+                message='commented task is completed',
+                subject='commented task is completed',
+                recipient_list=list(user_email)
+            )
         self.check_task_status_send_email()
         return Response(status=status.HTTP_200_OK)
 
-    def check_task_status_send_email(self):
+    @classmethod
+    def check_task_status_send_email(cls):
         # Send email to all people that have status False on their task
         user_email = set(Task.objects.select_related(
             'assigned_to').filter(status=False).values_list('assigned_to__email', flat=True))
-        self.send_email_task(
-            message='Your task is not completed',
-            subject='Your task is not completed',
+        cls.send_email_task(
+            message=f'Your task is not completed',
+            subject=f'Your task is not completed',
             recipient_list=list(user_email)
         )
 
