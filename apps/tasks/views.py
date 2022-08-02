@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.db.models import Sum
+
 from rest_framework import status, filters
 from rest_framework.decorators import action
 from rest_framework.mixins import (
@@ -114,19 +115,10 @@ class TaskViewSet(
                 subject='commented task is completed',
                 recipient_list=list(user_email)
             )
-        self.check_task_status_send_email()
+
         return Response(status=status.HTTP_200_OK)
 
-    @classmethod
-    def check_task_status_send_email(cls):
-        # Send email to all people that have status False on their task
-        user_email = set(Task.objects.select_related(
-            'assigned_to').filter(status=False).values_list('assigned_to__email', flat=True))
-        cls.send_email_task(
-            message=f'Your task is not completed',
-            subject=f'Your task is not completed',
-            recipient_list=list(user_email)
-        )
+
 
     @classmethod
     def send_email_task(cls, message, subject, recipient_list):

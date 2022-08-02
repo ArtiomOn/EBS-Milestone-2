@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'django_nose',
     'django_extensions',
     'debug_toolbar',
+    'django_celery_beat',
+    'django_celery_results',
 
     'apps.common',
     'apps.users',
@@ -249,3 +251,8 @@ SIMPLE_JWT = {
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CELERY_BROKER_URL = 'pyamqp://guest@localhost//'
+CELERY_ALWAYS_EAGER = True
+
+CELERY_RESULT_BACKEND = "rpc://"
