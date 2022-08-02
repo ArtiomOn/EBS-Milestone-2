@@ -255,4 +255,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CELERY_BROKER_URL = 'pyamqp://guest@localhost//'
 CELERY_ALWAYS_EAGER = True
 
-CELERY_RESULT_BACKEND = "rpc://"
+CELERY_RESULT_BACKEND = 'django-db'
