@@ -19,11 +19,12 @@ def debug_task(self):
 
 app.conf.beat_schedule = {
     # Scheduler Name
-    'print-message-ten-seconds': {
+    'send-email-every-day-18-hour': {
         # Task Name (Name Specified in Decorator)
         'task': 'apps.tasks.tasks.send_email',
         # Schedule
-        'schedule': crontab(hour='14')
+        'schedule': crontab(hour='18', minute=0)
+
     }
 }
 app.conf.timezone = 'UTC'
