@@ -30,10 +30,11 @@ class TaskAdmin(ModelAdmin):
     def save_related(self, request, form, formsets, change):
         task_id = form.instance.id
         queryset = super(TaskAdmin, self).get_queryset(request).filter(pk=task_id)
-        user_email = queryset.select_related('assigned_to').values_list('assigned_to__email', flat=True)
         change_data = form.changed_data
-        status = queryset.values_list('status', flat=True).filter().first()
-        if change_data == ['status'] and status is False:
+        status = form.instance.status
+        if 'status' in change_data and status is False:
+            user_email = queryset.select_related('assigned_to').values_list('assigned_to__email', flat=True)
+
             send_mail(
                 message=f'Admin changed you task status to Undone!',
                 subject=f'You have one undone Task. Id:{task_id}',
