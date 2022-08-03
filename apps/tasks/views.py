@@ -118,8 +118,6 @@ class TaskViewSet(
 
         return Response(status=status.HTTP_200_OK)
 
-
-
     @classmethod
     def send_email_task(cls, message, subject, recipient_list):
         send_mail(
