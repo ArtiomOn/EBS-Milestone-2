@@ -1,7 +1,12 @@
+from django.core.mail import send_mail
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 from datetime import datetime
+
+from config import settings
 
 User = get_user_model()
 
@@ -91,3 +96,20 @@ class TimeLog(models.Model):
     @staticmethod
     def current_month():
         return datetime.now().strftime('%m')
+
+
+@receiver(post_save, sender=Task, dispatch_uid='send_email_user')
+def send_email_user(sender, instance, **kwargs):
+    change_data = kwargs['update_fields']
+    status = instance.status
+    if 'status' in change_data and status is False:
+        user_email = Task.objects.filter(
+            pk=instance.id).select_related('assigned_to').values_list('assigned_to__email', flat=True)
+
+        send_mail(
+            message=f'Admin changed you task status to Undone!',
+            subject=f'You have one undone Task. Id:{instance.id}',
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=list(user_email),
+            fail_silently=False
+        )
