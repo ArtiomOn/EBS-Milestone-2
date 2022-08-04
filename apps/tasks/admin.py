@@ -59,6 +59,7 @@ def send_user_email(model_admin, request, queryset):
 class TaskAdmin(ModelAdmin):
     list_display = ('id', 'title', 'status', 'assigned_to')
     list_filter = ('status',)
+    search_fields = ('title', )
     actions = [
         update_task_status_false,
         update_task_status_true,
