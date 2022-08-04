@@ -2,6 +2,9 @@ from django.contrib import admin
 from django.contrib.admin import ModelAdmin
 from django.core.mail import send_mail
 from django.db.models.signals import post_save
+from django.core.signals import request_finished
+
+from rest_framework.exceptions import NotFound
 
 from apps.tasks.models import (
     Task,
@@ -11,17 +14,33 @@ from apps.tasks.models import (
 from config import settings
 
 
-@admin.action(description='Update task status')
-def update_task_status(model_admin, request, queryset):
+@admin.action(description='Update task status to True')
+def update_task_status_true(model_admin, request, queryset):
+    status = queryset.values_list('status', flat=True)
+    if not all(list(status)):
+        queryset.update(status=True)
+    else:
+        raise NotFound
+
+
+@admin.action(description='Update task status to False')
+def update_task_status_false(model_admin, request, queryset):
     task_id = list(queryset.values_list('id', flat=True))
     status = queryset.values_list('status', flat=True)
-    for (task_status, tasks_id) in zip(status, task_id):
-        if task_status is True:
+    if all(list(status)):
+        for (task_status, tasks_id) in zip(status, task_id):
             queryset.filter(pk__in=[tasks_id]).update(status=False)
-        else:
-            queryset.filter(pk__in=[tasks_id]).update(status=True)
-
-    post_save.send(sender=Task, instance=queryset, action_change_status=True, task_id=task_id)
+            user_email = queryset.filter(pk__in=[tasks_id]).select_related('assigned_to').values_list(
+                'assigned_to__email', flat=True)
+            send_mail(
+                message='Admin changed you task status to Undone!',
+                subject=f'You have one undone Task. ID: {tasks_id}',
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=list(user_email),
+                fail_silently=False
+            )
+    else:
+        raise NotFound
 
 
 @admin.action(description='Send email to user')
@@ -39,7 +58,11 @@ def send_user_email(model_admin, request, queryset):
 @admin.register(Task)
 class TaskAdmin(ModelAdmin):
     list_display = ('id', 'title', 'status', 'assigned_to')
-    actions = [update_task_status, send_user_email]
+    actions = [
+        update_task_status_false,
+        update_task_status_true,
+        send_user_email
+    ]
 
     def save_model(self, request, obj, form, change):
         update_fields = []

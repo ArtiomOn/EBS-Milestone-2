@@ -99,29 +99,17 @@ class TimeLog(models.Model):
 
 
 @receiver(post_save, sender=Task, dispatch_uid='send_email_user')
-def send_email_user(sender, instance, action_change_status=False, task_id=None, **kwargs):
-    if (task_id, action_change_status) is True:
-        status = instance.values_list('status', flat=True)
-        for (task_status, tasks_id) in zip(status, task_id):
-            if action_change_status is True and task_status is False:
-                current_task_id = instance.filter(pk=tasks_id)
-                user_email = current_task_id.select_related('assigned_to').values_list(
-                    'assigned_to__email', flat=True)
-                send_mail(
-                    message=f'Admin changed you task status to Undone!',
-                    subject=f'You have one undone Task.',
-                    from_email=settings.EMAIL_HOST_USER,
-                    recipient_list=list(user_email),
-                    fail_silently=False
-                )
-    else:
-        current_task_id = instance.filter(pk=list(instance.values_list('id', flat=True)))
-        user_email = current_task_id.select_related('assigned_to').values_list(
-            'assigned_to__email', flat=True)
+def send_email_user(sender, instance, **kwargs):
+    change_data = kwargs['update_fields']
+    status = instance.status
+    if 'status' in change_data and status is False:
+        user_email = Task.objects.filter(
+            pk=instance.id).select_related('assigned_to').values_list('assigned_to__email', flat=True)
         send_mail(
             message=f'Admin changed you task status to Undone!',
-            subject=f'You have one undone Task.',
+            subject=f'You have one undone Task. Id:{instance.id}',
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=list(user_email),
             fail_silently=False
         )
+
