@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.contrib.admin import ModelAdmin, SimpleListFilter
 from django.core.mail import send_mail
+from django.db.models import QuerySet
+from drf_util.utils import gt
 
 from rest_framework.exceptions import NotFound
 
@@ -8,50 +10,36 @@ from apps.tasks.models import (
     Task,
     Comment,
     TimeLog,
-    File
+    Attachment
 )
 from config import settings
 
 
 class FileSizeFilter(SimpleListFilter):
-    title = 'File size filter'
+    title = 'size'
 
     parameter_name = 'file_size'
 
     def lookups(self, request, model_admin):
         return (
             ('1Mb', ('≤1Mb')),
-            ('5Mb', ('≤5Mb')),
-            ('10Mb', ('≤10Mb')),
-            ('20Mb', ('≤20Mb')),
-            ('50Mb', ('≤50Mb')),
-            ('100Mb', ('≤100Mb')),
+            ('5-10Mb', ('5Mb-10Mb')),
+            ('10Mb', ('≥10Mb')),
         )
 
     def queryset(self, request, queryset):
         if self.value() == '1Mb':
             return queryset.filter(
-                file_size__lte=1000
+                file_size__lte=1000000
             )
-        if self.value() == '5Mb':
+        if self.value() == '5-10Mb':
             return queryset.filter(
-                file_size__lte=5000
+                file_size__gte=1000000,
+                file_size__lte=10000000
             )
         if self.value() == '10Mb':
             return queryset.filter(
-                file_size__lte=10000
-            )
-        if self.value() == '20Mb':
-            return queryset.filter(
-                file_size__lte=20000
-            )
-        if self.value() == '50Mb':
-            return queryset.filter(
-                file_size__lte=50000
-            )
-        if self.value() == '100Mb':
-            return queryset.filter(
-                file_size__lte=100000
+                file_size__gte=10000000
             )
 
 
@@ -108,12 +96,16 @@ class TaskAdmin(ModelAdmin):
     ]
 
     def save_model(self, request, obj, form, change):
+        ignored_keys = []
         update_fields = []
-        for key, value in form.cleaned_data.items():
-            if value != form.initial[key]:
-                update_fields.append(key)
-
-        obj.save(update_fields=update_fields)
+        if bool(form.initial):
+            for key, value in form.cleaned_data.items():
+                if isinstance(value, QuerySet):
+                    ignored_keys.append(key)
+                if value != form.initial[key]:
+                    update_fields.append(key)
+            return obj.save(update_fields=set(update_fields) - set(ignored_keys))
+        return super(TaskAdmin, self).save_model(request, obj, form, change)
 
 
 @admin.register(Comment)
@@ -126,16 +118,8 @@ class TimeLogAdmin(ModelAdmin):
     list_display = ('id', 'task', 'user', 'started_at', 'duration')
 
 
-@admin.register(File)
-class FileAdmin(ModelAdmin):
-    list_display = ('id', 'title', 'file_url', 'extension', 'file_size', 'user_id', 'task_id', 'comment_id')
-    list_filter = (FileSizeFilter, 'extension', 'user', 'task', 'comment')
+@admin.register(Attachment)
+class AttachmentAdmin(ModelAdmin):
+    list_display = ('id', 'title', 'file_url', 'extension', 'file_size', 'user')
+    list_filter = (FileSizeFilter, 'extension', 'user')
     search_fields = ('title', 'file_url')
-
-    def save_model(self, request, obj, form, change):
-        update_fields = []
-        for key, value in form.cleaned_data.items():
-            if value != form.initial[key]:
-                update_fields.append(key)
-
-        obj.save(update_fields=update_fields)
