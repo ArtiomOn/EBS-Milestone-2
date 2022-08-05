@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import os
 
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
@@ -12,6 +13,7 @@ from rest_framework.mixins import (
     CreateModelMixin,
     DestroyModelMixin,
 )
+from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
@@ -22,6 +24,7 @@ from apps.tasks.models import (
     Task,
     Comment,
     TimeLog,
+    File
 )
 from apps.tasks.serializers import (
     TaskSerializer,
@@ -32,6 +35,7 @@ from apps.tasks.serializers import (
     TimeLogSerializer,
     TimeLogCreateSerializer,
     TimeLogUserDetailSerializer,
+    FileSerializer
 )
 from config import settings
 
@@ -41,7 +45,8 @@ __all__ = [
     'TaskViewSet',
     'TaskCommentViewSet',
     'TaskTimeLogViewSet',
-    'TimeLogViewSet'
+    'TimeLogViewSet',
+    'FileViewSet'
 ]
 
 
@@ -239,3 +244,20 @@ class TimeLogViewSet(
         serializer = self.get_serializer(queryset, many=True)
         serializer.total_time = queryset.aggregate(Sum('duration'))
         return Response(serializer.total_time)
+
+
+class FileViewSet(
+    ListModelMixin,
+    CreateModelMixin,
+    GenericViewSet
+):
+    queryset = File.objects.all()
+    serializer_class = FileSerializer
+    parser_classes = (MultiPartParser,)
+    permission_classes = (IsAuthenticated,)
+
+    def perform_create(self, serializer):
+        serializer.save(
+            user=self.request.user,
+            extension=os.path.splitext(str(serializer.validated_data['file_url']))[1]
+        )
