@@ -1,13 +1,16 @@
+from django.template.defaultfilters import filesizeformat
+
 from rest_framework.serializers import (
     ModelSerializer,
     DurationField,
+    SerializerMethodField
 )
 
 from apps.tasks.models import (
     Task,
     Comment,
     TimeLog,
-    File
+    Attachment
 )
 
 __all__ = [
@@ -19,7 +22,7 @@ __all__ = [
     'TimeLogSerializer',
     'TimeLogCreateSerializer',
     'TimeLogUserDetailSerializer',
-    'FileSerializer'
+    'AttachmentSerializer'
 ]
 
 
@@ -37,7 +40,7 @@ class TaskListSerializer(ModelSerializer):
 
     class Meta:
         model = Task
-        fields = ('id', 'title', 'duration')
+        fields = ('id', 'title', 'duration', 'attachment')
 
 
 class TaskAssignNewUserSerializer(ModelSerializer):
@@ -87,15 +90,20 @@ class TimeLogUserDetailSerializer(ModelSerializer):
 
     class Meta:
         model = TimeLog
-        fields = ('id', 'total_time', 'started_at', 'duration')
+        fields = ('id', 'total_time', 'started_at', 'duration', 'attachment')
         extra_kwargs = {
             'started_at': {'read_only': True}
         }
 
 
-class FileSerializer(ModelSerializer):
+class AttachmentSerializer(ModelSerializer):
+    file_size = SerializerMethodField()
+
+    def get_file_size(self, object):
+        return filesizeformat(object.file_size)
+
     class Meta:
-        model = File
+        model = Attachment
         fields = '__all__'
 
         extra_kwargs = {
