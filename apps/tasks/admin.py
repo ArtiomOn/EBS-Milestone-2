@@ -1,8 +1,6 @@
 from django.contrib import admin
-from django.contrib.admin import ModelAdmin
+from django.contrib.admin import ModelAdmin, SimpleListFilter
 from django.core.mail import send_mail
-from django.db.models.signals import post_save
-from django.core.signals import request_finished
 
 from rest_framework.exceptions import NotFound
 
@@ -10,8 +8,51 @@ from apps.tasks.models import (
     Task,
     Comment,
     TimeLog,
+    File
 )
 from config import settings
+
+
+class FileSizeFilter(SimpleListFilter):
+    title = 'File size filter'
+
+    parameter_name = 'file_size'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('1Mb', ('≤1Mb')),
+            ('5Mb', ('≤5Mb')),
+            ('10Mb', ('≤10Mb')),
+            ('20Mb', ('≤20Mb')),
+            ('50Mb', ('≤50Mb')),
+            ('100Mb', ('≤100Mb')),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == '1Mb':
+            return queryset.filter(
+                file_size__lte=1000
+            )
+        if self.value() == '5Mb':
+            return queryset.filter(
+                file_size__lte=5000
+            )
+        if self.value() == '10Mb':
+            return queryset.filter(
+                file_size__lte=10000
+            )
+        if self.value() == '20Mb':
+            return queryset.filter(
+                file_size__lte=20000
+            )
+        if self.value() == '50Mb':
+            return queryset.filter(
+                file_size__lte=50000
+            )
+        if self.value() == '100Mb':
+            return queryset.filter(
+                file_size__lte=100000
+            )
 
 
 @admin.action(description='Update task status to True')
@@ -59,7 +100,7 @@ def send_user_email(model_admin, request, queryset):
 class TaskAdmin(ModelAdmin):
     list_display = ('id', 'title', 'status', 'assigned_to')
     list_filter = ('status',)
-    search_fields = ('title', )
+    search_fields = ('title',)
     actions = [
         update_task_status_false,
         update_task_status_true,
@@ -79,18 +120,17 @@ class TaskAdmin(ModelAdmin):
 class CommentAdmin(ModelAdmin):
     list_display = ('id', 'task_id', 'assigned_to')
 
-    def save_model(self, request, obj, form, change):
-        update_fields = []
-        for key, value in form.cleaned_data.items():
-            if value != form.initial[key]:
-                update_fields.append(key)
-
-        obj.save(update_fields=update_fields)
-
 
 @admin.register(TimeLog)
 class TimeLogAdmin(ModelAdmin):
     list_display = ('id', 'task', 'user', 'started_at', 'duration')
+
+
+@admin.register(File)
+class FileAdmin(ModelAdmin):
+    list_display = ('id', 'title', 'file_url', 'extension', 'file_size', 'user_id', 'task_id', 'comment_id')
+    list_filter = (FileSizeFilter, 'extension', 'user', 'task', 'comment')
+    search_fields = ('title', 'file_url')
 
     def save_model(self, request, obj, form, change):
         update_fields = []
