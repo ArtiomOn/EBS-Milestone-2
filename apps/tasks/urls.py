@@ -10,14 +10,14 @@ from apps.tasks.views import (
     TaskCommentViewSet,
     TaskTimeLogViewSet,
     TimeLogViewSet,
-    FileViewSet,
+    AttachmentViewSet,
 )
 
 
 base_router = DefaultRouter()
 base_router.register(r'tasks', TaskViewSet, basename='tasks')
 base_router.register(r'timelogs', TimeLogViewSet, basename='timelogs')
-base_router.register(r'files', FileViewSet, basename='files')
+base_router.register(r'files', AttachmentViewSet, basename='files')
 
 nested_router = NestedSimpleRouter(base_router, r'tasks', lookup='task')
 nested_router.register(r'comments', TaskCommentViewSet, basename='comments')
