@@ -192,39 +192,39 @@ WSGI_AUTO_RELOAD = True
 
 DEBUG_LEVEL = "INFO"
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': True,
-    'formatters': {
-        'standard': {
-            'format': '%(asctime)s [%(levelname)s]- %(message)s'}
-
-    },
-    'handlers': {
-        'console': {
-            'level': DEBUG_LEVEL,
-            'class': 'logging.StreamHandler',
-            'formatter': 'standard'
-        }
-    },
-    'loggers': {
-        'info': {
-            'handlers': ["console"],
-            'level': DEBUG_LEVEL,
-            'propagate': True
-        },
-        'django': {
-            'handlers': ['console'],
-            'level': DEBUG_LEVEL,
-            'propagate': True,
-        },
-        'django.request': {
-            'handlers': ['console'],
-            'level': DEBUG_LEVEL,
-            'propagate': True,
-        }
-    },
-}
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': True,
+#     'formatters': {
+#         'standard': {
+#             'format': '%(asctime)s [%(levelname)s]- %(message)s'}
+#
+#     },
+#     'handlers': {
+#         'console': {
+#             'level': DEBUG_LEVEL,
+#             'class': 'logging.StreamHandler',
+#             'formatter': 'standard'
+#         }
+#     },
+#     'loggers': {
+#         'info': {
+#             'handlers': ["console"],
+#             'level': DEBUG_LEVEL,
+#             'propagate': True
+#         },
+#         'django': {
+#             'handlers': ['console'],
+#             'level': DEBUG_LEVEL,
+#             'propagate': True,
+#         },
+#         'django.request': {
+#             'handlers': ['console'],
+#             'level': DEBUG_LEVEL,
+#             'propagate': True,
+#         }
+#     },
+# }
 
 DATABASES = {
     'default': {
