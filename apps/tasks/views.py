@@ -24,7 +24,7 @@ from apps.tasks.models import (
     Task,
     Comment,
     TimeLog,
-    File
+    Attachment
 )
 from apps.tasks.serializers import (
     TaskSerializer,
@@ -35,7 +35,7 @@ from apps.tasks.serializers import (
     TimeLogSerializer,
     TimeLogCreateSerializer,
     TimeLogUserDetailSerializer,
-    FileSerializer
+    AttachmentSerializer
 )
 from config import settings
 
@@ -46,7 +46,7 @@ __all__ = [
     'TaskCommentViewSet',
     'TaskTimeLogViewSet',
     'TimeLogViewSet',
-    'FileViewSet'
+    'AttachmentViewSet'
 ]
 
 
@@ -246,18 +246,21 @@ class TimeLogViewSet(
         return Response(serializer.total_time)
 
 
-class FileViewSet(
+class AttachmentViewSet(
     ListModelMixin,
     CreateModelMixin,
     GenericViewSet
 ):
-    queryset = File.objects.all()
-    serializer_class = FileSerializer
+    queryset = Attachment.objects.all()
+    serializer_class = AttachmentSerializer
     parser_classes = (MultiPartParser,)
     permission_classes = (IsAuthenticated,)
 
-    def perform_create(self, serializer):
-        serializer.save(
-            user=self.request.user,
-            extension=os.path.splitext(str(serializer.validated_data['file_url']))[1]
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save(
+            user=self.request.user
         )
+        return Response(self.get_serializer(instance=instance).data)
+
