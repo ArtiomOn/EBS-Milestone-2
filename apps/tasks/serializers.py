@@ -1,12 +1,13 @@
 from rest_framework.serializers import (
     ModelSerializer,
-    DurationField
+    DurationField,
 )
 
 from apps.tasks.models import (
     Task,
     Comment,
-    TimeLog
+    TimeLog,
+    File
 )
 
 __all__ = [
@@ -17,7 +18,8 @@ __all__ = [
     'CommentSerializer',
     'TimeLogSerializer',
     'TimeLogCreateSerializer',
-    'TimeLogUserDetailSerializer'
+    'TimeLogUserDetailSerializer',
+    'FileSerializer'
 ]
 
 
@@ -26,7 +28,7 @@ class TaskSerializer(ModelSerializer):
         model = Task
         fields = '__all__'
         extra_kwargs = {
-            'assigned_to': {'read_only': True}
+            'assigned_to': {'read_only': True},
         }
 
 
@@ -88,4 +90,16 @@ class TimeLogUserDetailSerializer(ModelSerializer):
         fields = ('id', 'total_time', 'started_at', 'duration')
         extra_kwargs = {
             'started_at': {'read_only': True}
+        }
+
+
+class FileSerializer(ModelSerializer):
+    class Meta:
+        model = File
+        fields = '__all__'
+
+        extra_kwargs = {
+            'user': {'read_only': True},
+            'extension': {'read_only': True},
+            'file_size': {'read_only': True}
         }
