@@ -16,7 +16,7 @@ __all__ = [
     'Task',
     'Comment',
     'TimeLog',
-    'File'
+    'Attachment'
 ]
 
 
@@ -34,6 +34,11 @@ class Task(models.Model):
         on_delete=models.CASCADE,
         related_name='tasks',
         null=True
+    )
+    attachment = models.ManyToManyField(
+        'Attachment',
+        related_name='task_attachments',
+        blank=True
     )
 
     class Meta:
@@ -57,6 +62,11 @@ class Comment(models.Model):
         on_delete=models.CASCADE,
         null=True,
         related_name='comments'
+    )
+    attachment = models.ManyToManyField(
+        'Attachment',
+        related_name='comment_attachments',
+        blank=True
     )
 
     class Meta:
@@ -88,6 +98,11 @@ class TimeLog(models.Model):
         null=True,
         blank=True
     )
+    attachment = models.ManyToManyField(
+        'Attachment',
+        related_name='timelog_attachments',
+        blank=True
+    )
 
     class Meta:
         verbose_name = 'Time Log'
@@ -101,7 +116,7 @@ class TimeLog(models.Model):
         return datetime.now().strftime('%m')
 
 
-class File(models.Model):
+class Attachment(models.Model):
     title = models.CharField(
         max_length=75,
     )
@@ -116,36 +131,27 @@ class File(models.Model):
     file_size = models.IntegerField(
         validators=[size],
         blank=True,
-        null=True,
-        verbose_name=''
-    )
-    task = models.ForeignKey(
-        Task,
-        on_delete=models.CASCADE,
-        null=True,
-        related_name='files',
-        blank=True
-    )
-    comment = models.ForeignKey(
-        Comment,
-        on_delete=models.CASCADE,
-        null=True,
-        related_name='files',
-        blank=True
+        null=True
     )
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         null=True,
-        related_name='files'
+        related_name='attachments'
     )
 
     class Meta:
-        verbose_name = 'File'
-        verbose_name_plural = 'Files'
+        verbose_name = 'Attachment'
+        verbose_name_plural = 'Attachments'
 
     def __str__(self):
         return self.title
+
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
+        self.file_size = self.file_url.size
+        self.extension = os.path.splitext(str(self.file_url))[1]
+        super(Attachment, self).save(force_insert, force_update, using, update_fields)
 
 
 @receiver(post_save, sender=Task, dispatch_uid='send_email_user')
@@ -163,13 +169,3 @@ def send_email_user(sender, instance, **kwargs):
                 recipient_list=list(user_email),
                 fail_silently=False
             )
-
-
-@receiver(post_save, sender=File, dispatch_uid='file_path')
-def file_path(sender, instance, **kwargs):
-    queryset = File.objects.filter(pk=instance.id)
-    file_url = instance.file_url.path
-    file_size = round(os.path.getsize(file_url)/1024)
-
-    queryset.update(file_size=file_size)
-    queryset.update(file_url=file_url)
