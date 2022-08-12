@@ -26,6 +26,8 @@ ALLOWED_HOSTS = ["*"]
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',
+
     'django.contrib.auth',
     'django.contrib.admin',
     'django.contrib.contenttypes',
@@ -42,6 +44,7 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'django_celery_beat',
     'django_celery_results',
+    'wkhtmltopdf',
 
     'apps.common',
     'apps.users',
@@ -65,7 +68,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ["templates/"],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -74,6 +77,9 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'libraries': {
+                'staticfiles': 'django.templatetags.static',
+            }
         },
     },
 ]
@@ -88,6 +94,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_HEADERS = (
     'accept',
     'accept-encoding',
+    'Currency',
     'authorization',
     'content-type',
     'dnt',
@@ -98,6 +105,8 @@ CORS_ALLOW_HEADERS = (
     'token',
     'cache-control'
 )
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 REST_FRAMEWORK = {
     'DATETIME_FORMAT': "%Y-%m-%dT%H:%M:%SZ",
@@ -192,40 +201,6 @@ WSGI_AUTO_RELOAD = True
 
 DEBUG_LEVEL = "INFO"
 
-# LOGGING = {
-#     'version': 1,
-#     'disable_existing_loggers': True,
-#     'formatters': {
-#         'standard': {
-#             'format': '%(asctime)s [%(levelname)s]- %(message)s'}
-#
-#     },
-#     'handlers': {
-#         'console': {
-#             'level': DEBUG_LEVEL,
-#             'class': 'logging.StreamHandler',
-#             'formatter': 'standard'
-#         }
-#     },
-#     'loggers': {
-#         'info': {
-#             'handlers': ["console"],
-#             'level': DEBUG_LEVEL,
-#             'propagate': True
-#         },
-#         'django': {
-#             'handlers': ['console'],
-#             'level': DEBUG_LEVEL,
-#             'propagate': True,
-#         },
-#         'django.request': {
-#             'handlers': ['console'],
-#             'level': DEBUG_LEVEL,
-#             'propagate': True,
-#         }
-#     },
-# }
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -256,3 +231,7 @@ CELERY_BROKER_URL = 'pyamqp://guest@localhost//'
 CELERY_ALWAYS_EAGER = True
 
 CELERY_RESULT_BACKEND = 'django-db'
+
+WKHTMLTOPDF_CMD_OPTIONS = {
+    'quiet': True,
+}
