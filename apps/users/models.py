@@ -1,7 +1,9 @@
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import UserManager, AbstractUser
 from django.utils.translation import gettext_lazy as _
-from django.db.models import EmailField
+from django.db.models import EmailField, ManyToManyField
+
+from apps.tasks.models import Attachment
 
 __all__ = [
     'CustomUserManager',
@@ -26,6 +28,7 @@ class CustomUserManager(UserManager):
 class CustomUser(AbstractUser):
     objects = CustomUserManager()
     email = EmailField(_('email address'), blank=False, unique=True)
+    profile_image = ManyToManyField(Attachment, 'user_attachment', blank=True)
 
     REQUIRED_FIELDS = []
     USERNAME_FIELD = 'email'
