@@ -2,7 +2,6 @@ from django.contrib import admin
 from django.contrib.admin import ModelAdmin, SimpleListFilter
 from django.core.mail import send_mail
 from django.db.models import QuerySet
-from drf_util.utils import gt
 
 from rest_framework.exceptions import NotFound
 
@@ -10,7 +9,8 @@ from apps.tasks.models import (
     Task,
     Comment,
     TimeLog,
-    Attachment
+    Attachment,
+    Project
 )
 from config import settings
 
@@ -86,7 +86,7 @@ def send_user_email(model_admin, request, queryset):
 
 @admin.register(Task)
 class TaskAdmin(ModelAdmin):
-    list_display = ('id', 'title', 'status')
+    list_display = ('id', 'title', 'status', 'project')
     list_filter = ('status',)
     search_fields = ('title',)
     actions = [
@@ -123,3 +123,8 @@ class AttachmentAdmin(ModelAdmin):
     list_display = ('id', 'title', 'file_url', 'extension', 'file_size', 'user')
     list_filter = (FileSizeFilter, 'extension', 'user')
     search_fields = ('title', 'file_url')
+
+
+@admin.register(Project)
+class ProjectAdmin(ModelAdmin):
+    list_display = ('name', 'owner', 'description', 'created_at', 'updated_at')
