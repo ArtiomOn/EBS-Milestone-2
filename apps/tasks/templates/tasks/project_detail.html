@@ -1,0 +1,201 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Project</title>
+</head>
+
+<body>
+<style>
+    .tip {
+    width: 0;
+    height: 0;
+    position: absolute;
+    background: transparent;
+    border: 10px solid #ccc;
+}
+
+.tip-up {
+    top: -25px;
+    left: 10px;
+    border-right-color: transparent;
+    border-left-color: transparent;
+    border-top-color: transparent;
+}
+
+.tip-down {
+    bottom: -25px;
+    left: 10px;
+    border-right-color: transparent;
+    border-left-color: transparent;
+    border-bottom-color: transparent;
+}
+
+.tip-left {
+    top: 10px;
+    left: -25px;
+    border-top-color: transparent;
+    border-left-color: transparent;
+    border-bottom-color: transparent;
+}
+
+.tip-right {
+    top: 10px;
+    right: -25px;
+    border-top-color: transparent;
+    border-right-color: transparent;
+    border-bottom-color: transparent;
+}
+
+.dialogbox .body {
+    position: relative;
+    max-width: 300px;
+    height: auto;
+    margin: 20px 10px;
+    padding: 5px;
+    background-color: #DADADA;
+    border-radius: 3px;
+    border: 5px solid #ccc;
+}
+
+.body .message {
+    min-height: 30px;
+    border-radius: 3px;
+    font-family: Arial, serif ;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #797979;
+}
+
+.task-header h1 {
+    text-align: center;
+}
+
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+    background-color: #eaffeb;
+}
+
+
+table {
+    width: 100%;
+    height: 100%;
+}
+
+h1 {
+    text-align: center;
+}
+</style>
+<hr>
+<div class="task-header">
+    <h1>Project detail</h1>
+    <hr>
+</div>
+<div class="task-body">
+    <table>
+        <tr>
+            <th>Id</th>
+            <th>Name</th>
+            <th>Owner</th>
+            <th>Logo</th>
+            <th>Description</th>
+            <th>Created at</th>
+            <th>Updated at</th>
+        </tr>
+        {% for project in projects.all %}
+            <tr>
+                <td>{{ project.id }}</td>
+                <td>{{ project.name }}</td>
+                <td>{{ project.owner }}</td>
+                <td>{{ project.logo.all|join:", " }}</td>
+                <td>{{ project.description }}</td>
+                <td>{{ project.created_at }}</td>
+                <td>{{ project.updated_at }}</td>
+            </tr>
+        {% endfor %}
+
+    </table>
+    <br>
+
+    <hr>
+    <br>
+    <h1>Project tasks</h1>
+
+    <table>
+        <tr>
+            <th>Id</th>
+            <th>Title</th>
+            <th>Project</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th>Assigned to</th>
+            <th>Attachment</th>
+        </tr>
+        {% for task in tasks %}
+            <tr>
+                <td>{{ task.id }}</td>
+                <td>{{ task.title }}</td>
+                <td>{{ task.project }}</td>
+                <td>{{ task.description }}</td>
+                <td>{{ task.status }}</td>
+                <td>{{ task.assigned_to.all|join:", " }}</td>
+                {% if task.attachment.all|join:", " == '' %}
+                    <td>-</td>
+                {% else %}
+                    <td>{{ task.attachment.all|join:", " }}</td>
+                {% endif %}
+            </tr>
+        {% endfor %}
+
+    </table>
+    <hr>
+    <h1>Project comments</h1>
+    <hr>
+    {% for comment in comments %}
+        <div class="dialogbox">
+            <div class="body">
+                <span class="tip tip-right"></span>
+                <div class="message">
+                    <span>{{ comment.text }}</span>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+    <hr>
+    <h1>Project time logs</h1>
+    <hr>
+    <table>
+        <tr>
+            <th>Id</th>
+            <th>Task</th>
+            <th>User</th>
+            <th>Started at</th>
+            <th>Duration</th>
+            <th>Attachment</th>
+        </tr>
+        {% for timelog in timelogs %}
+            <tr>
+                <td>{{ timelog.id }}</td>
+                <td>{{ timelog.task }}</td>
+                <td>{{ timelog.user }}</td>
+                <td>{{ timelog.started_at }}</td>
+                {% if timelog.duration is None %}
+                    <td>-</td>
+                {% else %}
+                    <td>{{ timelog.duration }}</td>
+                {% endif %}
+                {% if timelog.attachment.all|join:", " == '' %}
+                    <td>-</td>
+                {% else %}
+                    <td>{{ timelog.attachment.all|join:", " }}</td>
+                {% endif %}
+            </tr>
+        {% endfor %}
+
+    </table>
+</div>
+</body>
+</html>
