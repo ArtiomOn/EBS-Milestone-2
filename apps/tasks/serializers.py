@@ -10,7 +10,8 @@ from apps.tasks.models import (
     Task,
     Comment,
     TimeLog,
-    Attachment
+    Attachment,
+    Project
 )
 
 __all__ = [
@@ -22,11 +23,13 @@ __all__ = [
     'TimeLogSerializer',
     'TimeLogCreateSerializer',
     'TimeLogUserDetailSerializer',
-    'AttachmentSerializer'
+    'AttachmentSerializer',
+    'ProjectSerializer'
 ]
 
 
 class TaskSerializer(ModelSerializer):
+
     class Meta:
         model = Task
         fields = '__all__'
@@ -111,3 +114,9 @@ class AttachmentSerializer(ModelSerializer):
             'extension': {'read_only': True},
             'file_size': {'read_only': True}
         }
+
+
+class ProjectSerializer(ModelSerializer):
+    class Meta:
+        model = Project
+        fields = '__all__'
