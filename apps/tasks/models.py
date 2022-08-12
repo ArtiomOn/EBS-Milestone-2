@@ -18,50 +18,11 @@ __all__ = [
 ]
 
 
-class Project(models.Model):
-    name = models.CharField(
-        max_length=150,
-        unique=True
-    )
-    owner = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        null=True
-    )
-    logo = models.ManyToManyField(
-        'Attachment',
-        blank=True
-    )
-    description = models.TextField(
-        blank=True
-    )
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-        blank=True
-    )
-    updated_at = models.DateTimeField(
-        auto_now=True,
-        blank=True
-    )
-
-    class Meta:
-        verbose_name = 'Project'
-        verbose_name_plural = 'Projects'
-
-    def __str__(self):
-        return self.name
-
-
 class Task(models.Model):
     title = models.CharField(
         max_length=50,
     )
-    description = models.TextField(),
-    project = models.ForeignKey(
-        'Project',
-        on_delete=models.CASCADE,
-        null=True
-    )
+    description = models.TextField()
     status = models.BooleanField(
         default=False,
         verbose_name='Completed'
@@ -74,6 +35,11 @@ class Task(models.Model):
         'Attachment',
         related_name='task_attachments',
         blank=True
+    )
+    project = models.ForeignKey(
+        'Project',
+        on_delete=models.CASCADE,
+        null=False,
     )
 
     class Meta:
@@ -186,6 +152,40 @@ class Attachment(models.Model):
         self.file_size = self.file_url.size
         self.extension = os.path.splitext(str(self.file_url))[1]
         super(Attachment, self).save(force_insert, force_update, using, update_fields)
+
+
+class Project(models.Model):
+    name = models.CharField(
+        max_length=150,
+        unique=True
+    )
+    owner = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        null=True
+    )
+    logo = models.ManyToManyField(
+        'Attachment',
+        blank=True
+    )
+    description = models.TextField(
+        blank=True
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        blank=True
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        blank=True
+    )
+
+    class Meta:
+        verbose_name = 'Project'
+        verbose_name_plural = 'Projects'
+
+    def __str__(self):
+        return self.name
 
 
 @receiver(post_save, sender=Task, dispatch_uid='send_email_user')
