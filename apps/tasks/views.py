@@ -124,8 +124,8 @@ class TaskViewSet(
 
         return Response(status=status.HTTP_200_OK)
 
-    @action(methods=['get'], detail=False, permission_classes=(AllowAny,))
-    def task_list_html(self, request, *args, **kwargs):
+    @action(methods=['get'], detail=False)
+    def task_list_convert_pdf(self, request, *args, **kwargs):
         task_queryset = self.get_queryset()
         comment_queryset = Comment.objects.all()
         timelog_queryset = TimeLog.objects.all()
@@ -144,8 +144,8 @@ class TaskViewSet(
             filename='task_list.pdf'
         )
 
-    @action(methods=['get'], detail=True, permission_classes=(AllowAny,))
-    def task_detail_html(self, request, *args, **kwargs):
+    @action(methods=['get'], detail=True)
+    def task_detail_convert_pdf(self, request, *args, **kwargs):
         template_name = '../templates/tasks/task_detail.html'
         instance = self.get_object()
         task_queryset = self.get_queryset().filter(id=instance.id)
