@@ -3,8 +3,7 @@ from datetime import datetime, timedelta
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.db.models import Sum
-from django.http import HttpResponse
-from django.shortcuts import render, get_object_or_404
+
 from rest_framework import status, filters
 from rest_framework.decorators import action
 from rest_framework.mixins import (
@@ -25,7 +24,8 @@ from apps.tasks.models import (
     Task,
     Comment,
     TimeLog,
-    Attachment
+    Attachment,
+    Project
 )
 from apps.tasks.serializers import (
     TaskSerializer,
@@ -36,18 +36,22 @@ from apps.tasks.serializers import (
     TimeLogSerializer,
     TimeLogCreateSerializer,
     TimeLogUserDetailSerializer,
-    AttachmentSerializer
+    AttachmentSerializer,
+    ProjectSerializer
 )
 from config import settings
 
-User = get_user_model()
+from config.settings import AUTH_USER_MODEL as User
+
+# User = get_user_model()
 
 __all__ = [
     'TaskViewSet',
     'TaskCommentViewSet',
     'TaskTimeLogViewSet',
     'TimeLogViewSet',
-    'AttachmentViewSet'
+    'AttachmentViewSet',
+    'ProjectViewSet'
 ]
 
 
@@ -77,7 +81,7 @@ class TaskViewSet(
         return super(TaskViewSet, self).get_serializer_class()
 
     def perform_create(self, serializer):
-        serializer.save(assigned_to=self.request.user)
+        serializer.save(assigned_to=[self.request.user])
 
     @action(methods=['get'], url_path='my_task', detail=False, serializer_class=TaskListSerializer)
     def my_task(self, request, *args, **kwargs):
@@ -126,7 +130,7 @@ class TaskViewSet(
 
     @action(methods=['get'], detail=False)
     def task_list_convert_pdf(self, request, *args, **kwargs):
-        task_queryset = self.get_queryset()
+        task_queryset = Task.objects.all()
         comment_queryset = Comment.objects.all()
         timelog_queryset = TimeLog.objects.all()
 
@@ -159,10 +163,10 @@ class TaskViewSet(
         }
 
         return PDFTemplateResponse(
-                   request=request,
-                   context=context,
-                   template=template_name,
-                   filename='task_detail.pdf')
+            request=request,
+            context=context,
+            template=template_name,
+            filename='task_detail.pdf')
 
     @classmethod
     def send_email_task(cls, message, subject, recipient_list):
@@ -304,3 +308,35 @@ class AttachmentViewSet(
             user=self.request.user
         )
         return Response(self.get_serializer(instance=instance).data)
+
+
+class ProjectViewSet(
+    GenericViewSet
+):
+    queryset = Project.objects.all()
+    serializer_class = ProjectSerializer
+    permission_classes = (AllowAny,)
+
+    @action(methods=['get'], detail=True)
+    def project_convert_pdf(self, request, *args, **kwargs):
+        instance = self.get_object()
+        project = Project.objects.filter(id=instance.id)
+        task = Task.objects.filter(project_id=instance.id)
+        task_id = list(Task.objects.filter(project_id=instance.id).values_list('id', flat=True))
+        comment = Comment.objects.filter(task_id__in=task_id)
+        timelog = TimeLog.objects.filter(task_id__in=task_id)
+
+        context = {
+            'projects': project,
+            'tasks': task,
+            'comments': comment,
+            'timelogs': timelog
+        }
+
+        template_name = '../templates/tasks/project_detail.html'
+
+        return PDFTemplateResponse(
+            request=request,
+            context=context,
+            template=template_name,
+            filename='project_detail.pdf')
