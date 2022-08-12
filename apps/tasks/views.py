@@ -130,35 +130,39 @@ class TaskViewSet(
         comment_queryset = Comment.objects.all()
         timelog_queryset = TimeLog.objects.all()
 
-        html = render(
-            request=request,
-            template_name='tasks/index.html',
-            context={
-                'tasks': task_queryset,
-                'comments': comment_queryset,
-                'timelogs': timelog_queryset
-            }
-        )
-        return HttpResponse(content=html, content_type='text/html')
-
-    @action(methods=['get'], detail=False, url_path='convert_to_pdf', permission_classes=(AllowAny,))
-    def task_list_convert_pdf(self, request, *args, **kwargs):
-        template_name = '../templates/tasks/index.html'
-        task_queryset = self.get_queryset()
-        comment_queryset = Comment.objects.all()
-        timelog_queryset = TimeLog.objects.all()
-
+        template_name = 'tasks/task_list.html',
         context = {
             'tasks': task_queryset,
             'comments': comment_queryset,
             'timelogs': timelog_queryset
         }
 
-        return PDFTemplateResponse(request=request,
-                                   context=context,
-                                   template=template_name,
-                                   filename='test_pdf.pdf',
-                                   )
+        return PDFTemplateResponse(
+            request=request,
+            context=context,
+            template=template_name,
+            filename='task_list.pdf'
+        )
+
+    @action(methods=['get'], detail=True, permission_classes=(AllowAny,))
+    def task_detail_html(self, request, *args, **kwargs):
+        template_name = '../templates/tasks/task_detail.html'
+        instance = self.get_object()
+        task_queryset = self.get_queryset().filter(id=instance.id)
+        comments = Comment.objects.filter(task_id=instance.id)
+        timelogs = TimeLog.objects.filter(task_id=instance.id)
+
+        context = {
+            'tasks': task_queryset,
+            'comments': comments,
+            'timelogs': timelogs
+        }
+
+        return PDFTemplateResponse(
+                   request=request,
+                   context=context,
+                   template=template_name,
+                   filename='task_detail.pdf')
 
     @classmethod
     def send_email_task(cls, message, subject, recipient_list):

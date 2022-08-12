@@ -86,7 +86,7 @@ def send_user_email(model_admin, request, queryset):
 
 @admin.register(Task)
 class TaskAdmin(ModelAdmin):
-    list_display = ('id', 'title', 'status', 'assigned_to')
+    list_display = ('id', 'title', 'status')
     list_filter = ('status',)
     search_fields = ('title',)
     actions = [

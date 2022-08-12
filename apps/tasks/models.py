@@ -27,11 +27,9 @@ class Task(models.Model):
         default=False,
         verbose_name='Completed'
     )
-    assigned_to = models.ForeignKey(
+    assigned_to = models.ManyToManyField(
         User,
-        on_delete=models.CASCADE,
-        related_name='tasks',
-        null=True
+        related_name='tasks'
     )
     attachment = models.ManyToManyField(
         'Attachment',
