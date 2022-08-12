@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta
-import os
 
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.db.models import Sum
-
+from django.http import HttpResponse
+from django.shortcuts import render, get_object_or_404
 from rest_framework import status, filters
 from rest_framework.decorators import action
 from rest_framework.mixins import (
@@ -14,10 +14,11 @@ from rest_framework.mixins import (
     DestroyModelMixin,
 )
 from rest_framework.parsers import MultiPartParser
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from wkhtmltopdf.views import PDFTemplateResponse
 
 from apps.tasks.filtersets import TaskFilterSet
 from apps.tasks.models import (
@@ -122,6 +123,42 @@ class TaskViewSet(
             )
 
         return Response(status=status.HTTP_200_OK)
+
+    @action(methods=['get'], detail=False, permission_classes=(AllowAny,))
+    def task_list_html(self, request, *args, **kwargs):
+        task_queryset = self.get_queryset()
+        comment_queryset = Comment.objects.all()
+        timelog_queryset = TimeLog.objects.all()
+
+        html = render(
+            request=request,
+            template_name='tasks/index.html',
+            context={
+                'tasks': task_queryset,
+                'comments': comment_queryset,
+                'timelogs': timelog_queryset
+            }
+        )
+        return HttpResponse(content=html, content_type='text/html')
+
+    @action(methods=['get'], detail=False, url_path='convert_to_pdf', permission_classes=(AllowAny,))
+    def task_list_convert_pdf(self, request, *args, **kwargs):
+        template_name = '../templates/tasks/index.html'
+        task_queryset = self.get_queryset()
+        comment_queryset = Comment.objects.all()
+        timelog_queryset = TimeLog.objects.all()
+
+        context = {
+            'tasks': task_queryset,
+            'comments': comment_queryset,
+            'timelogs': timelog_queryset
+        }
+
+        return PDFTemplateResponse(request=request,
+                                   context=context,
+                                   template=template_name,
+                                   filename='test_pdf.pdf',
+                                   )
 
     @classmethod
     def send_email_task(cls, message, subject, recipient_list):
@@ -263,4 +300,3 @@ class AttachmentViewSet(
             user=self.request.user
         )
         return Response(self.get_serializer(instance=instance).data)
-
