@@ -86,7 +86,7 @@ def send_user_email(model_admin, request, queryset):
 
 @admin.register(Task)
 class TaskAdmin(ModelAdmin):
-    list_display = ('id', 'title', 'status', 'project')
+    list_display = ('id', 'title', 'status', 'project', 'description')
     list_filter = ('status',)
     search_fields = ('title',)
     actions = [
@@ -127,4 +127,4 @@ class AttachmentAdmin(ModelAdmin):
 
 @admin.register(Project)
 class ProjectAdmin(ModelAdmin):
-    list_display = ('name', 'owner', 'description', 'created_at', 'updated_at')
+    list_display = ('id', 'name', 'owner', 'description', 'created_at', 'updated_at')
