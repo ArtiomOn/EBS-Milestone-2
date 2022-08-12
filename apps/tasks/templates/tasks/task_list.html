@@ -4,7 +4,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Task</title>
 </head>
 <style>
     .tip {
@@ -75,6 +75,7 @@
         <tr>
             <th>Id</th>
             <th>Title</th>
+            <th>Project</th>
             <th>Description</th>
             <th>Status</th>
             <th>Assigned to</th>
@@ -84,9 +85,10 @@
             <tr>
                 <td>{{ task.id }}</td>
                 <td>{{ task.title }}</td>
+                <td>{{ task.project }}</td>
                 <td>{{ task.description }}</td>
                 <td>{{ task.status }}</td>
-                <td>{{ task.assigned_to }}</td>
+                <td>{{ task.assigned_to.all|join:', ' }}</td>
                 {% if task.attachment.all|join:", " == '' %}
                     <td>-</td>
                 {% else %}
