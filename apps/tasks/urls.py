@@ -13,7 +13,6 @@ from apps.tasks.views import (
     AttachmentViewSet,
 )
 
-
 base_router = DefaultRouter()
 base_router.register(r'tasks', TaskViewSet, basename='tasks')
 base_router.register(r'timelogs', TimeLogViewSet, basename='timelogs')
