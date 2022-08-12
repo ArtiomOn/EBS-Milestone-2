@@ -1,0 +1,91 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="{% static 'tasks/style.css' %}">
+</head>
+
+<body>
+<hr>
+<div class="task-header">
+    <h1>In your project you have {{ tasks.count }} tasks</h1>
+    <hr>
+</div>
+<div class="task-body">
+
+    <table>
+        <tr>
+            <th>Id</th>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th>Assigned to</th>
+            <th>Attachment</th>
+        </tr>
+        {% for task in tasks %}
+            <tr>
+                <td>{{ task.id }}</td>
+                <td>{{ task.title }}</td>
+                <td>{{ task.description }}</td>
+                <td>{{ task.status }}</td>
+                <td>{{ task.assigned_to }}</td>
+                {% if task.attachment.all|join:", " == '' %}
+                    <td>-</td>
+                {% else %}
+                    <td>{{ task.attachment.all|join:", " }}</td>
+                {% endif %}
+            </tr>
+        {% endfor %}
+
+    </table>
+    <hr>
+    <h1>In your project you have {{ comments.count }} comments</h1>
+    <hr>
+    {% for comment in comments %}
+        <div class="dialogbox">
+            <div class="body">
+                <span class="tip tip-right"></span>
+                <div class="message">
+                    <span>{{ comment.text }}</span>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+    <hr>
+    <h1>In your project you have {{ timelogs.count }} time logs</h1>
+    <hr>
+    <table>
+        <tr>
+            <th>Id</th>
+            <th>Task</th>
+            <th>User</th>
+            <th>Started at</th>
+            <th>Duration</th>
+            <th>Attachment</th>
+        </tr>
+        {% for timelog in timelogs %}
+            <tr>
+                <td>{{ timelog.id }}</td>
+                <td>{{ timelog.task }}</td>
+                <td>{{ timelog.user }}</td>
+                <td>{{ timelog.started_at }}</td>
+                {% if timelog.duration is None %}
+                    <td>-</td>
+                {% else %}
+                    <td>{{ timelog.duration }}</td>
+                {% endif %}
+                {% if timelog.attachment.all|join:", " == '' %}
+                    <td>-</td>
+                {% else %}
+                    <td>{{ timelog.attachment.all|join:", " }}</td>
+                {% endif %}
+            </tr>
+        {% endfor %}
+
+    </table>
+</div>
+</body>
+</html>
