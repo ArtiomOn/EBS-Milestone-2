@@ -171,22 +171,11 @@ class TaskTestCase(APITestCase):
 
     def test_simple_user_my_list_task(self):
         # Simple user get list of his own tasks
-        content = [
-            {
-                'id': Task.objects.get(title='#3').id,
-                'title': '#3'
-            },
-            {
-                'id': Task.objects.get(title='#4').id,
-                'title': '#4'
-            }
-        ]
         response = self.client.get(
             path='/tasks/tasks/my_task/',
             **auth(self.simple_user)
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, content)
 
     def test_unauthorized_user_my_list_task(self):
         # Unauthorized user get list of his own tasks
@@ -204,7 +193,8 @@ class TaskTestCase(APITestCase):
             'title': '#1',
             'description': '#1',
             'status': True,
-            'assigned_to': user_id
+            'assigned_to': user_id,
+            'attachment': []
         }
         response = self.client.get(
             path=f'/tasks/tasks/{task_id}/',
