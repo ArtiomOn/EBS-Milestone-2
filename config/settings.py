@@ -235,3 +235,9 @@ CELERY_RESULT_BACKEND = 'django-db'
 WKHTMLTOPDF_CMD_OPTIONS = {
     'quiet': True,
 }
+
+STATICFILES_FINDERS = (
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+)
+
