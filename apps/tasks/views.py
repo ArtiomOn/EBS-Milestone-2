@@ -13,7 +13,7 @@ from rest_framework.mixins import (
     DestroyModelMixin,
 )
 from rest_framework.parsers import MultiPartParser
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -126,7 +126,7 @@ class TaskViewSet(
 
         return Response(status=status.HTTP_200_OK)
 
-    @action(methods=['get'], detail=False, permission_classes=(AllowAny,))
+    @action(methods=['get'], detail=False, permission_classes=(IsAuthenticated,))
     def task_list_convert_pdf(self, request, *args, **kwargs):
         task_queryset = Task.objects.all()
         comment_queryset = Comment.objects.all()
@@ -142,7 +142,7 @@ class TaskViewSet(
 
         return self.generate_pdf(request=request, template_name=template_name, context=context, file_name=pdf_name)
 
-    @action(methods=['get'], detail=True, permission_classes=(AllowAny,))
+    @action(methods=['get'], detail=True, permission_classes=(IsAuthenticated,))
     def task_detail_convert_pdf(self, request, *args, **kwargs):
         instance = self.get_object()
         task_queryset = Task.objects.all().filter(id=instance.id)
@@ -314,7 +314,7 @@ class ProjectViewSet(
 ):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
 
     @action(methods=['get'], detail=True)
     def project_detail_convert_pdf(self, request, *args, **kwargs):
