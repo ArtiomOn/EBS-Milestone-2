@@ -135,7 +135,7 @@ class Attachment(models.Model):
     )
     user = models.ForeignKey(
         User,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         null=True,
         related_name='attachments'
     )
@@ -161,7 +161,7 @@ class Project(models.Model):
     )
     owner = models.ForeignKey(
         User,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         null=True
     )
     logo = models.ManyToManyField(
