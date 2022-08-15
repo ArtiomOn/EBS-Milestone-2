@@ -59,7 +59,11 @@
                 <td>{{ task.description }}</td>
                 <td>{{ task.status }}</td>
                 <td>{{ task.assigned_to.all|join:", " }}</td>
-                <td>{{ task.parent}}</td>
+                {% if task.parent is None %}
+                    <td>-</td>
+                {% else %}
+                    <td>{{ task.parent }}</td>
+                {% endif %}
                 {% if task.attachment.all|join:", " == '' %}
                     <td>-</td>
                 {% else %}
