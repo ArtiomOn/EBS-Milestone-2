@@ -1,10 +1,6 @@
 from django.template.defaultfilters import filesizeformat
 
-from rest_framework.serializers import (
-    ModelSerializer,
-    DurationField,
-    SerializerMethodField
-)
+from rest_framework import serializers
 
 from apps.tasks.models import (
     Task,
@@ -28,8 +24,7 @@ __all__ = [
 ]
 
 
-class TaskSerializer(ModelSerializer):
-
+class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = '__all__'
@@ -38,21 +33,21 @@ class TaskSerializer(ModelSerializer):
         }
 
 
-class TaskListSerializer(ModelSerializer):
-    duration = DurationField(read_only=True)
+class TaskListSerializer(serializers.ModelSerializer):
+    duration = serializers.DurationField(read_only=True)
 
     class Meta:
         model = Task
         fields = ('id', 'title', 'duration', 'attachment')
 
 
-class TaskAssignNewUserSerializer(ModelSerializer):
+class TaskAssignNewUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = ('assigned_to',)
 
 
-class TaskUpdateStatusSerializer(ModelSerializer):
+class TaskUpdateStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = ('status',)
@@ -61,7 +56,7 @@ class TaskUpdateStatusSerializer(ModelSerializer):
         }
 
 
-class CommentSerializer(ModelSerializer):
+class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = '__all__'
@@ -71,13 +66,13 @@ class CommentSerializer(ModelSerializer):
         }
 
 
-class TimeLogSerializer(ModelSerializer):
+class TimeLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = TimeLog
         fields = '__all__'
 
 
-class TimeLogCreateSerializer(ModelSerializer):
+class TimeLogCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = TimeLog
         fields = '__all__'
@@ -88,8 +83,8 @@ class TimeLogCreateSerializer(ModelSerializer):
         }
 
 
-class TimeLogUserDetailSerializer(ModelSerializer):
-    total_time = DurationField(read_only=True)
+class TimeLogUserDetailSerializer(serializers.ModelSerializer):
+    total_time = serializers.DurationField(read_only=True)
 
     class Meta:
         model = TimeLog
@@ -99,8 +94,8 @@ class TimeLogUserDetailSerializer(ModelSerializer):
         }
 
 
-class AttachmentSerializer(ModelSerializer):
-    file_size = SerializerMethodField()
+class AttachmentSerializer(serializers.ModelSerializer):
+    file_size = serializers.SerializerMethodField()
 
     def get_file_size(self, object):
         return filesizeformat(object.file_size)
@@ -116,7 +111,7 @@ class AttachmentSerializer(ModelSerializer):
         }
 
 
-class ProjectSerializer(ModelSerializer):
+class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = '__all__'
