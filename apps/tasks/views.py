@@ -41,9 +41,7 @@ from apps.tasks.serializers import (
 )
 from config import settings
 
-from config.settings import AUTH_USER_MODEL as User
-
-# User = get_user_model()
+User = get_user_model()
 
 __all__ = [
     'TaskViewSet',
@@ -128,45 +126,38 @@ class TaskViewSet(
 
         return Response(status=status.HTTP_200_OK)
 
-    @action(methods=['get'], detail=False)
+    @action(methods=['get'], detail=False, permission_classes=(AllowAny,))
     def task_list_convert_pdf(self, request, *args, **kwargs):
         task_queryset = Task.objects.all()
         comment_queryset = Comment.objects.all()
         timelog_queryset = TimeLog.objects.all()
 
-        template_name = 'tasks/task_list.html',
+        template_name = 'tasks/task_list.html'
+        pdf_name = 'task_list.pdf'
         context = {
             'tasks': task_queryset,
             'comments': comment_queryset,
             'timelogs': timelog_queryset
         }
 
-        return PDFTemplateResponse(
-            request=request,
-            context=context,
-            template=template_name,
-            filename='task_list.pdf'
-        )
+        return self.generate_pdf(request=request, template_name=template_name, context=context, file_name=pdf_name)
 
-    @action(methods=['get'], detail=True)
+    @action(methods=['get'], detail=True, permission_classes=(AllowAny,))
     def task_detail_convert_pdf(self, request, *args, **kwargs):
-        template_name = '../templates/tasks/task_detail.html'
         instance = self.get_object()
-        task_queryset = self.get_queryset().filter(id=instance.id)
-        comments = Comment.objects.filter(task_id=instance.id)
-        timelogs = TimeLog.objects.filter(task_id=instance.id)
+        task_queryset = Task.objects.all().filter(id=instance.id)
+        comment_queryset = Comment.objects.all().filter(task_id=instance.id)
+        timelog_queryset = TimeLog.objects.all().filter(task_id=instance.id)
 
+        pdf_name = 'task_detail.pdf'
+        template_name = 'tasks/task_detail.html',
         context = {
             'tasks': task_queryset,
-            'comments': comments,
-            'timelogs': timelogs
+            'comments': comment_queryset,
+            'timelogs': timelog_queryset
         }
 
-        return PDFTemplateResponse(
-            request=request,
-            context=context,
-            template=template_name,
-            filename='task_detail.pdf')
+        return self.generate_pdf(request=request, template_name=template_name, context=context, file_name=pdf_name)
 
     @classmethod
     def send_email_task(cls, message, subject, recipient_list):
@@ -177,6 +168,14 @@ class TaskViewSet(
             recipient_list=recipient_list,
             fail_silently=False
         )
+
+    @staticmethod
+    def generate_pdf(request, context, template_name, file_name):
+        return PDFTemplateResponse(
+            request=request,
+            context=context,
+            template=template_name,
+            filename=file_name)
 
 
 class TaskCommentViewSet(
@@ -318,25 +317,28 @@ class ProjectViewSet(
     permission_classes = (AllowAny,)
 
     @action(methods=['get'], detail=True)
-    def project_convert_pdf(self, request, *args, **kwargs):
+    def project_detail_convert_pdf(self, request, *args, **kwargs):
+        template_name = '../templates/tasks/project_detail.html'
+        pdf_name = 'project.pdf'
         instance = self.get_object()
         project = Project.objects.filter(id=instance.id)
         task = Task.objects.filter(project_id=instance.id)
         task_id = list(Task.objects.filter(project_id=instance.id).values_list('id', flat=True))
         comment = Comment.objects.filter(task_id__in=task_id)
         timelog = TimeLog.objects.filter(task_id__in=task_id)
-
         context = {
             'projects': project,
             'tasks': task,
             'comments': comment,
-            'timelogs': timelog
+            'timelogs': timelog,
         }
 
-        template_name = '../templates/tasks/project_detail.html'
+        return self.generate_pdf(request=request, template_name=template_name, context=context, file_name=pdf_name)
 
+    @staticmethod
+    def generate_pdf(request, context, template_name, file_name):
         return PDFTemplateResponse(
             request=request,
             context=context,
             template=template_name,
-            filename='project_detail.pdf')
+            filename=file_name)
