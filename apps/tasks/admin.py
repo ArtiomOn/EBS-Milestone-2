@@ -2,7 +2,6 @@ from django.contrib import admin
 from django.contrib.admin import ModelAdmin, SimpleListFilter
 from django.core.mail import send_mail
 from django.db.models import QuerySet
-
 from rest_framework.exceptions import NotFound
 
 from apps.tasks.models import (
@@ -86,7 +85,7 @@ def send_user_email(model_admin, request, queryset):
 
 @admin.register(Task)
 class TaskAdmin(ModelAdmin):
-    list_display = ('id', 'title', 'status', 'project', 'description')
+    list_display = ('id', 'title', 'status', 'project', 'description', 'parent')
     list_filter = ('status',)
     search_fields = ('title',)
     actions = [
