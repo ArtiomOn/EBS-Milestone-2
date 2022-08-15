@@ -1,8 +1,7 @@
 from celery import shared_task
-
-from apps.tasks.models import Task
 from django.core.mail import send_mail
 
+from apps.tasks.models import Task
 from config import settings
 
 __all__ = [
