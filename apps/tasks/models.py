@@ -170,6 +170,11 @@ class Project(models.Model):
         on_delete=models.SET_NULL,
         null=True
     )
+    member = models.ManyToManyField(
+        User,
+        blank=True,
+        related_name='projects'
+    )
     logo = models.ManyToManyField(
         'Attachment',
         blank=True
