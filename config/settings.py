@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'django_celery_results',
     'wkhtmltopdf',
+    'guardian',
 
     'apps.common',
     'apps.users',
@@ -127,6 +128,11 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
 }
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'guardian.backends.ObjectPermissionBackend',
+)
 
 SWAGGER_SETTINGS = {
     'SECURITY_DEFINITIONS': {
@@ -240,4 +246,3 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
-
