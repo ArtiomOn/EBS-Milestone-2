@@ -10,6 +10,10 @@ from apps.tasks.models import (
     Project
 )
 
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
 __all__ = [
     'TaskSerializer',
     'TaskListSerializer',
