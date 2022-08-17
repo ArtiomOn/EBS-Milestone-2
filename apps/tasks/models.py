@@ -22,7 +22,16 @@ __all__ = [
 ]
 
 
+class TaskQuerySet(models.QuerySet):
+    def allowed_to(self, user: User):
+        return self.filter(
+            project_id__in=Project.objects.allowed_to(user).values('id')
+        )
+
+
 class Task(models.Model):
+    objects = TaskQuerySet.as_manager()
+
     title = models.CharField(
         max_length=50,
     )
@@ -164,7 +173,16 @@ class Attachment(models.Model):
         super(Attachment, self).save(force_insert, force_update, using, update_fields)
 
 
+class ProjectQuerySet(models.QuerySet):
+    def allowed_to(self, user: User):
+        return self.filter(
+            id__in=Project.objects.filter(member__id=user.id)
+        )
+
+
 class Project(models.Model):
+    objects = ProjectQuerySet.as_manager()
+
     name = models.CharField(
         max_length=150
     )

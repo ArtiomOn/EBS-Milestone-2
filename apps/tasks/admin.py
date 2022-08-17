@@ -5,7 +5,7 @@ from django.db.models import QuerySet
 
 from guardian.models import UserObjectPermission
 from guardian.admin import GuardedModelAdmin
-from guardian.shortcuts import get_objects_for_user
+from guardian.shortcuts import get_objects_for_user, assign_perm
 from rest_framework.exceptions import NotFound
 
 from apps.tasks.models import (
@@ -115,28 +115,24 @@ class TaskAdmin(GuardedModelAdmin):
 
     def get_queryset(self, request):
         queryset = super(TaskAdmin, self).get_queryset(request)
+        assign_perm('tasks.view_task', request.user)
+        assign_perm('tasks.add_task', request.user)
+        assign_perm('tasks.delete_task', request.user)
+        assign_perm('tasks.change_task', request.user)
         if request.user.is_superuser:
             return queryset
-        project_id = list(set(Task.objects.select_related(
-            'project'
-        ).filter(
-            assigned_to__id=request.user.id
-        ).values_list(
-            'project__id',
-            flat=True
-        )))
-        return queryset.filter(project_id__in=project_id)
-        # return get_objects_for_user(
-        #     user=request.user,
-        #     perms=[
-        #         'tasks.view_task',
-        #         'tasks.delete_task',
-        #         'tasks.add_task',
-        #         'tasks.change_task'
-        #     ],
-        #     klass=queryset.filter(project_id__in=project_id),
-        #     any_perm=True
-        # )
+        else:
+            return get_objects_for_user(
+                user=request.user,
+                perms=[
+                    'tasks.view_task',
+                    'tasks.add_task',
+                    'tasks.delete_task',
+                    'tasks.change_task'
+                ],
+                klass=queryset.allowed_to(user=request.user),
+                any_perm=True
+            )
 
     def save_model(self, request, obj, form, change):
         ignored_keys = []
