@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import UserManager, AbstractUser
@@ -62,13 +62,7 @@ class CustomUser(AbstractUser):
 )
 def check_image_extension(sender, instance, action, reverse, model, pk_set, **kwargs):
     if action == 'pre_add':
-        queryset = Attachment.objects.filter(
-            id__in=list(pk_set)
-        ).values_list(
-            'file_url',
-            flat=True
-        )
-        file_url = os.path.abspath(str(queryset[0]))
-        extension = os.path.splitext(file_url)[1]
+        instance: Attachment = instance
+        extension = Path(instance.file_url.name).suffix
         if extension not in ['.jpg', '.png', '.jpeg']:
             raise ValueError('Extensions are jpg, png, jpeg')
