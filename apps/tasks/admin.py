@@ -20,7 +20,6 @@ from config import settings
 
 class FileSizeFilter(SimpleListFilter):
     title = 'size'
-
     parameter_name = 'file_size'
 
     def lookups(self, request, model_admin):
@@ -167,8 +166,15 @@ class AttachmentAdmin(ModelAdmin):
 
 
 @admin.register(Project)
-class ProjectAdmin(ModelAdmin):
+class ProjectAdmin(GuardedModelAdmin):
     list_display = ('id', 'name', 'owner', 'description', 'created_at', 'updated_at')
+
+    def get_queryset(self, request):
+        queryset = super(ProjectAdmin, self).get_queryset(request)
+        if request.user.is_superuser:
+            return queryset
+        else:
+            return queryset.allowed_to(user=request.user)
 
 
 admin.site.register(UserObjectPermission)
