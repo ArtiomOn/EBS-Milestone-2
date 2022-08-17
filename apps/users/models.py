@@ -38,6 +38,9 @@ class CustomUser(AbstractUser):
     REQUIRED_FIELDS = []
     USERNAME_FIELD = 'email'
 
+    class Meta:
+        app_label = 'users'
+
 
 @receiver(m2m_changed, sender=CustomUser.profile_image.through, dispatch_uid='check_image_extension', weak=False)
 def check_image_extension(sender, instance, action, reverse, model, pk_set, **kwargs):
