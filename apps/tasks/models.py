@@ -1,13 +1,17 @@
 import os
 from datetime import datetime
 
+from django.contrib.auth.models import Group, Permission
+from django.contrib.contenttypes.models import ContentType
 from django.core.mail import send_mail
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from config import settings
-from config.settings import AUTH_USER_MODEL as User
+from config.settings import AUTH_USER_MODEL
+
+User = AUTH_USER_MODEL
 
 __all__ = [
     'Task',
@@ -162,8 +166,7 @@ class Attachment(models.Model):
 
 class Project(models.Model):
     name = models.CharField(
-        max_length=150,
-        unique=True
+        max_length=150
     )
     owner = models.ForeignKey(
         User,
