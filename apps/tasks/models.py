@@ -1,5 +1,5 @@
-import os
 from datetime import datetime
+from pathlib import Path
 
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
@@ -169,7 +169,7 @@ class Attachment(models.Model):
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
         self.file_size = self.file_url.size
-        self.extension = os.path.splitext(str(self.file_url))[1]
+        self.extension = Path(self.file_url.name).suffix
         super(Attachment, self).save(force_insert, force_update, using, update_fields)
 
 
