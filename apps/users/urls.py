@@ -9,11 +9,23 @@ from rest_framework_nested.routers import DefaultRouter
 from apps.users.views import UserViewSet
 
 base_router = DefaultRouter()
-base_router.register(r'user', UserViewSet, basename='users')
+base_router.register(
+    prefix=r'user',
+    viewset=UserViewSet,
+    basename='users'
+)
 
 urlpatterns = base_router.urls
 
 urlpatterns += [
-    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path(
+        'token/',
+        TokenObtainPairView.as_view(),
+        name='token_obtain_pair'
+    ),
+    path(
+        'token/refresh/',
+        TokenRefreshView.as_view(),
+        name='token_refresh'
+    ),
 ]

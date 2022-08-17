@@ -70,7 +70,9 @@ class TaskViewSet(
 
     def get_queryset(self):
         if self.action == 'list':
-            return self.queryset.annotate(duration=Sum('time_logs__duration'))
+            return self.queryset.annotate(
+                duration=Sum('time_logs__duration')
+            )
         return super(TaskViewSet, self).get_queryset()
 
     def get_serializer_class(self):
@@ -81,26 +83,50 @@ class TaskViewSet(
     def perform_create(self, serializer):
         serializer.save(assigned_to=[self.request.user])
 
-    @action(methods=['get'], url_path='my_task', detail=False, serializer_class=TaskListSerializer)
+    @action(
+        methods=['get'],
+        url_path='my_task',
+        detail=False,
+        serializer_class=TaskListSerializer
+    )
     def my_task(self, request, *args, **kwargs):
-        queryset = self.queryset.filter(assigned_to=request.user)
+        queryset = self.queryset.filter(
+            assigned_to=request.user
+        )
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    @action(methods=['get'], url_path='completed_task', detail=False, serializer_class=TaskListSerializer)
+    @action(
+        methods=['get'],
+        url_path='completed_task',
+        detail=False,
+        serializer_class=TaskListSerializer
+    )
     def complete_task(self, request, *args, **kwargs):
         queryset = self.queryset.filter(status=True)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    @action(methods=['patch'], detail=True, url_path='assign_user', serializer_class=TaskAssignNewUserSerializer)
+    @action(
+        methods=['patch'],
+        detail=True,
+        url_path='assign_user',
+        serializer_class=TaskAssignNewUserSerializer
+    )
     def assign(self, request, *args, **kwargs):
         instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data)
-        serializer.is_valid(raise_exception=True)
+        serializer = self.get_serializer(
+            instance,
+            data=request.data
+        )
+        serializer.is_valid(
+            raise_exception=True
+        )
         serializer.save()
         instance.assigned_to = serializer.validated_data['assigned_to']
-        user_email = User.objects.get(id=instance.assigned_to.id).email
+        user_email = User.objects.get(
+            id=instance.assigned_to.id
+        ).email
         self.send_email_task(
             message=f'Task with id:{instance.id} is assigned to you',
             subject='Task assign to you',
@@ -108,25 +134,42 @@ class TaskViewSet(
         )
         return Response(status=status.HTTP_200_OK)
 
-    @action(methods=['get'], detail=True, url_path='update_task_status', serializer_class=TaskUpdateStatusSerializer)
+    @action(
+        methods=['get'],
+        detail=True,
+        url_path='update_task_status',
+        serializer_class=TaskUpdateStatusSerializer
+    )
     def update_status(self, request, *args, **kwargs):
         instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data)
+        serializer = self.get_serializer(
+            instance,
+            data=request.data
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save(status=True)
 
         user_email = set(Comment.objects.select_related(
-            'task__assigned_to').filter(task_id=instance.id).values_list('assigned_to__email', flat=True))
+            'task__assigned_to'
+        ).filter(
+            task_id=instance.id
+        ).values_list(
+            'assigned_to__email',
+            flat=True
+        ))
         if user_email:
             self.send_email_task(
                 message='commented task is completed',
                 subject='commented task is completed',
                 recipient_list=list(user_email)
             )
-
         return Response(status=status.HTTP_200_OK)
 
-    @action(methods=['get'], detail=False, permission_classes=(IsAuthenticated,))
+    @action(
+        methods=['get'],
+        detail=False,
+        permission_classes=(IsAuthenticated,)
+    )
     def task_list_convert_pdf(self, request, *args, **kwargs):
         task_queryset = Task.objects.all()
         comment_queryset = Comment.objects.all()
@@ -139,15 +182,32 @@ class TaskViewSet(
             'comments': comment_queryset,
             'timelogs': timelog_queryset
         }
+        return self.generate_pdf(
+            request=request,
+            template_name=template_name,
+            context=context,
+            file_name=pdf_name
+        )
 
-        return self.generate_pdf(request=request, template_name=template_name, context=context, file_name=pdf_name)
-
-    @action(methods=['get'], detail=True, permission_classes=(IsAuthenticated,))
+    @action(
+        methods=['get'],
+        detail=True,
+        permission_classes=(IsAuthenticated,)
+    )
     def task_detail_convert_pdf(self, request, *args, **kwargs):
         instance = self.get_object()
-        task_queryset = Task.objects.all().filter(id=instance.id)
-        comment_queryset = Comment.objects.all().filter(task_id=instance.id)
-        timelog_queryset = TimeLog.objects.all().filter(task_id=instance.id)
+        task_queryset = Task.objects.all(
+        ).filter(
+            id=instance.id
+        )
+        comment_queryset = Comment.objects.all(
+        ).filter(
+            task_id=instance.id
+        )
+        timelog_queryset = TimeLog.objects.all(
+        ).filter(
+            task_id=instance.id
+        )
 
         pdf_name = 'task_detail.pdf'
         template_name = 'tasks/task_detail.html',
@@ -157,7 +217,12 @@ class TaskViewSet(
             'timelogs': timelog_queryset
         }
 
-        return self.generate_pdf(request=request, template_name=template_name, context=context, file_name=pdf_name)
+        return self.generate_pdf(
+            request=request,
+            template_name=template_name,
+            context=context,
+            file_name=pdf_name
+        )
 
     @classmethod
     def send_email_task(cls, message, subject, recipient_list):
@@ -190,16 +255,26 @@ class TaskCommentViewSet(
 
     def get_queryset(self):
         if self.action == 'list':
-            return self.queryset.filter(task_id=self.kwargs.get('task__pk'))
+            return self.queryset.filter(
+                task_id=self.kwargs.get(
+                    'task__pk'
+                ))
         return super(TaskCommentViewSet, self).get_queryset()
 
     def perform_create(self, serializer):
         task_id = self.kwargs.get('task__pk')
-        serializer.save(assigned_to=self.request.user, task_id=task_id)
-
+        serializer.save(
+            assigned_to=self.request.user,
+            task_id=task_id
+        )
         user_email = Task.objects.select_related(
-            'assigned_to').filter(id=task_id).values_list('assigned_to__email', flat=True)
-
+            'assigned_to'
+        ).filter(
+            id=task_id
+        ).values_list(
+            'assigned_to__email',
+            flat=True
+        )
         self.send_email_comment(
             message=f'You task with id:{task_id} is commented',
             subject='Your task is commented',
@@ -233,7 +308,9 @@ class TaskTimeLogViewSet(
         return super(TaskTimeLogViewSet, self).get_serializer_class()
 
     def perform_create(self, serializer):
-        duration = timedelta(minutes=self.request.data['duration'])
+        duration = timedelta(
+            minutes=self.request.data['duration']
+        )
         serializer.save(
             task_id=self.kwargs.get('task__pk'),
             user=self.request.user,
@@ -241,11 +318,22 @@ class TaskTimeLogViewSet(
         )
 
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset().filter(task_id=self.kwargs.get('task__pk'))
-        serializer = self.get_serializer(queryset, many=True)
+        queryset = self.get_queryset(
+        ).filter(
+            task_id=self.kwargs.get(
+                'task__pk'
+            ))
+        serializer = self.get_serializer(
+            queryset,
+            many=True
+        )
         return Response(serializer.data)
 
-    @action(methods=['get'], url_path='start_timer', detail=False)
+    @action(
+        methods=['get'],
+        url_path='start_timer',
+        detail=False
+    )
     def start_timer(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         queryset.create(
@@ -255,7 +343,11 @@ class TaskTimeLogViewSet(
         )
         return Response(status=status.HTTP_201_CREATED)
 
-    @action(methods=['get'], url_path='stop_timer', detail=False)
+    @action(
+        methods=['get'],
+        url_path='stop_timer',
+        detail=False
+    )
     def stop_timer(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         instance = queryset.filter(
@@ -277,16 +369,28 @@ class TimeLogViewSet(
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        return self.filter_queryset(self.queryset.order_by('-duration'))[:5]
+        return self.filter_queryset(
+            self.queryset.order_by(
+                '-duration'
+            ))[:5]
 
-    @action(methods=['get'], detail=False, url_path='time_logs_month')
+    @action(
+        methods=['get'],
+        detail=False,
+        url_path='time_logs_month'
+    )
     def time_log_month(self, request, *args, **kwargs):
         queryset = self.queryset.filter(
             user=self.request.user,
             started_at__month=TimeLog.current_month(),
         )
-        serializer = self.get_serializer(queryset, many=True)
-        serializer.total_time = queryset.aggregate(Sum('duration'))
+        serializer = self.get_serializer(
+            queryset,
+            many=True
+        )
+        serializer.total_time = queryset.aggregate(
+            Sum('duration')
+        )
         return Response(serializer.total_time)
 
 
@@ -301,12 +405,17 @@ class AttachmentViewSet(
     permission_classes = (IsAuthenticated,)
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(
+            data=request.data
+        )
         serializer.is_valid(raise_exception=True)
         instance = serializer.save(
             user=self.request.user
         )
-        return Response(self.get_serializer(instance=instance).data)
+        return Response(
+            self.get_serializer(
+                instance=instance
+            ).data)
 
 
 class ProjectViewSet(
@@ -316,16 +425,31 @@ class ProjectViewSet(
     serializer_class = ProjectSerializer
     permission_classes = (IsAuthenticated,)
 
-    @action(methods=['get'], detail=True)
+    @action(
+        methods=['get'],
+        detail=True
+    )
     def project_detail_convert_pdf(self, request, *args, **kwargs):
         template_name = '../templates/tasks/project_detail.html'
         pdf_name = 'project.pdf'
         instance = self.get_object()
-        project = Project.objects.filter(id=instance.id)
-        task = Task.objects.filter(project_id=instance.id)
-        task_id = list(Task.objects.filter(project_id=instance.id).values_list('id', flat=True))
-        comment = Comment.objects.filter(task_id__in=task_id)
-        timelog = TimeLog.objects.filter(task_id__in=task_id)
+        project = Project.objects.filter(
+            id=instance.id
+        )
+        task = Task.objects.filter(
+            project_id=instance.id
+        )
+        task_id = list(Task.objects.filter(
+            project_id=instance.id
+        ).values_list(
+            'id', flat=True
+        ))
+        comment = Comment.objects.filter(
+            task_id__in=task_id
+        )
+        timelog = TimeLog.objects.filter(
+            task_id__in=task_id
+        )
         context = {
             'projects': project,
             'tasks': task,
@@ -333,7 +457,12 @@ class ProjectViewSet(
             'timelogs': timelog,
         }
 
-        return self.generate_pdf(request=request, template_name=template_name, context=context, file_name=pdf_name)
+        return self.generate_pdf(
+            request=request,
+            template_name=template_name,
+            context=context,
+            file_name=pdf_name
+        )
 
     @staticmethod
     def generate_pdf(request, context, template_name, file_name):

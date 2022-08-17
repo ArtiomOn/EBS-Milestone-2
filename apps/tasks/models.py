@@ -209,7 +209,13 @@ def send_email_user(sender, instance, **kwargs):
     if change_data is not None:
         if 'status' in change_data and status is False:
             user_email = Task.objects.filter(
-                pk=instance.id).select_related('assigned_to').values_list('assigned_to__email', flat=True)
+                pk=instance.id
+            ).select_related(
+                'assigned_to'
+            ).values_list(
+                'assigned_to__email',
+                flat=True
+            )
             send_mail(
                 message=f'Admin changed you task status to Undone!',
                 subject=f'You have one undone Task. Id:{instance.id}',

@@ -17,18 +17,50 @@ from apps.tasks.views import (
 from config import settings
 
 base_router = DefaultRouter()
-base_router.register(r'tasks', TaskViewSet, basename='tasks')
-base_router.register(r'timelogs', TimeLogViewSet, basename='timelogs')
-base_router.register(r'files', AttachmentViewSet, basename='files')
-base_router.register(r'projects', ProjectViewSet, basename='projects')
 
-nested_router = NestedSimpleRouter(base_router, r'tasks', lookup='task')
-nested_router.register(r'comments', TaskCommentViewSet, basename='comments')
-nested_router.register(r'task_timelogs', TaskTimeLogViewSet, basename='task_timelogs')
+base_router.register(
+    prefix=r'tasks',
+    viewset=TaskViewSet,
+    basename='tasks'
+)
+base_router.register(
+    prefix=r'timelogs',
+    viewset=TimeLogViewSet,
+    basename='timelogs'
+)
+base_router.register(
+    prefix=r'files',
+    viewset=AttachmentViewSet,
+    basename='files'
+)
+base_router.register(
+    prefix=r'projects',
+    viewset=ProjectViewSet,
+    basename='projects'
+)
+
+nested_router = NestedSimpleRouter(
+    parent_router=base_router,
+    parent_prefix=r'tasks',
+    lookup='task'
+)
+nested_router.register(
+    prefix=r'comments',
+    viewset=TaskCommentViewSet,
+    basename='comments'
+)
+nested_router.register(
+    prefix=r'task_timelogs',
+    viewset=TaskTimeLogViewSet,
+    basename='task_timelogs'
+)
 
 urlpatterns = [
     path('', include(base_router.urls)),
     path('', include(nested_router.urls)),
 ]
 
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns += static(
+    settings.MEDIA_URL,
+    document_root=settings.MEDIA_ROOT
+)

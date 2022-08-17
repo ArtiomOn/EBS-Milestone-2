@@ -2,10 +2,10 @@ from django.contrib import admin
 from django.contrib.admin import ModelAdmin, SimpleListFilter
 from django.core.mail import send_mail
 from django.db.models import QuerySet
+
 from guardian.models import UserObjectPermission
 from guardian.admin import GuardedModelAdmin
 from guardian.shortcuts import get_objects_for_user
-
 from rest_framework.exceptions import NotFound
 
 from apps.tasks.models import (
@@ -33,16 +33,16 @@ class FileSizeFilter(SimpleListFilter):
     def queryset(self, request, queryset):
         if self.value() == '1Mb':
             return queryset.filter(
-                file_size__lte=1000000
+                file_size__lte=1_000_000
             )
         if self.value() == '5-10Mb':
             return queryset.filter(
-                file_size__gte=1000000,
-                file_size__lte=10000000
+                file_size__gte=1_000_000,
+                file_size__lte=10_000_000
             )
         if self.value() == '10Mb':
             return queryset.filter(
-                file_size__gte=10000000
+                file_size__gte=10_000_000
             )
 
 
@@ -61,9 +61,19 @@ def update_task_status_false(model_admin, request, queryset):
     status = queryset.values_list('status', flat=True)
     if all(list(status)):
         for (task_status, tasks_id) in zip(status, task_id):
-            queryset.filter(pk__in=[tasks_id]).update(status=False)
-            user_email = queryset.filter(pk__in=[tasks_id]).select_related('assigned_to').values_list(
-                'assigned_to__email', flat=True)
+            queryset.filter(
+                pk__in=[tasks_id]
+            ).update(
+                status=False
+            )
+            user_email = queryset.filter(
+                pk__in=[tasks_id]
+            ).select_related(
+                'assigned_to'
+            ).values_list(
+                'assigned_to__email',
+                flat=True
+            )
             send_mail(
                 message='Admin changed you task status to Undone!',
                 subject=f'You have one undone Task. ID: {tasks_id}',
@@ -77,7 +87,12 @@ def update_task_status_false(model_admin, request, queryset):
 
 @admin.action(description='Send email to user')
 def send_user_email(model_admin, request, queryset):
-    queryset = queryset.select_related('assigned_to').values_list('assigned_to__email', flat=True)
+    queryset = queryset.select_related(
+        'assigned_to'
+    ).values_list(
+        'assigned_to__email',
+        flat=True
+    )
     send_mail(
         message='test message from django admin',
         subject='test subject from django admin',
@@ -103,7 +118,13 @@ class TaskAdmin(GuardedModelAdmin):
         if request.user.is_superuser:
             return queryset
         project_id = list(set(Task.objects.select_related(
-            'project').filter(assigned_to__id=request.user.id).values_list('project__id', flat=True)))
+            'project'
+        ).filter(
+            assigned_to__id=request.user.id
+        ).values_list(
+            'project__id',
+            flat=True
+        )))
         return queryset.filter(project_id__in=project_id)
         # return get_objects_for_user(
         #     user=request.user,
@@ -126,7 +147,9 @@ class TaskAdmin(GuardedModelAdmin):
                     ignored_keys.append(key)
                 if value != form.initial[key]:
                     update_fields.append(key)
-            return obj.save(update_fields=set(update_fields) - set(ignored_keys))
+            return obj.save(
+                update_fields=set(update_fields) - set(ignored_keys)
+            )
         return super(TaskAdmin, self).save_model(request, obj, form, change)
 
 

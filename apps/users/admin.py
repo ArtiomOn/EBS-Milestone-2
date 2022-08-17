@@ -18,5 +18,7 @@ class CustomUserAdmin(ModelAdmin):
                     ignored_keys.append(key)
                 if value != form.initial[key]:
                     update_fields.append(key)
-            return obj.save(update_fields=set(update_fields) - set(ignored_keys))
+            return obj.save(
+                update_fields=set(update_fields) - set(ignored_keys)
+            )
         return super(CustomUserAdmin, self).save_model(request, obj, form, change)

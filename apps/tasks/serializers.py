@@ -1,4 +1,5 @@
 from django.template.defaultfilters import filesizeformat
+from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
 
@@ -9,8 +10,6 @@ from apps.tasks.models import (
     Attachment,
     Project
 )
-
-from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
@@ -101,8 +100,9 @@ class TimeLogUserDetailSerializer(serializers.ModelSerializer):
 class AttachmentSerializer(serializers.ModelSerializer):
     file_size = serializers.SerializerMethodField()
 
-    def get_file_size(self, object):
-        return filesizeformat(object.file_size)
+    @staticmethod
+    def get_file_size(instance):
+        return filesizeformat(instance.file_size)
 
     class Meta:
         model = Attachment

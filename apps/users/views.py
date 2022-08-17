@@ -33,8 +33,13 @@ class UserViewSet(
 
     authentication_classes = [JWTAuthentication]
 
-    @action(methods=['post'], detail=False, url_path='register', serializer_class=UserSerializer,
-            permission_classes=(AllowAny,))
+    @action(
+        methods=['post'],
+        detail=False,
+        url_path='register',
+        serializer_class=UserSerializer,
+        permission_classes=(AllowAny,)
+    )
     def register(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -49,21 +54,26 @@ class UserViewSet(
         )
         user.set_password(serializer.validated_data['password'])
         user.save()
-
         refresh = RefreshToken.for_user(user)
-
         return Response({
             'refresh': str(refresh),
             'access': str(refresh.access_token)
         })
 
-    @action(methods=['post'], detail=False, url_path='login', serializer_class=UserCreateSerializer,
-            permission_classes=(AllowAny,))
+    @action(
+        methods=['post'],
+        detail=False,
+        url_path='login',
+        serializer_class=UserCreateSerializer,
+        permission_classes=(AllowAny,)
+    )
     def login(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=False)
-        user = get_object_or_404(User, email=serializer.data['email'])
-
+        user = get_object_or_404(
+            User,
+            email=serializer.data['email']
+        )
         if user.check_password(serializer.data['password']):
             refresh = RefreshToken.for_user(user)
 
@@ -71,5 +81,4 @@ class UserViewSet(
                 'refresh': str(refresh),
                 'access': str(refresh.access_token)
             })
-
         return Response(status=status.HTTP_404_NOT_FOUND)
