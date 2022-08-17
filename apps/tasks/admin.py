@@ -2,6 +2,10 @@ from django.contrib import admin
 from django.contrib.admin import ModelAdmin, SimpleListFilter
 from django.core.mail import send_mail
 from django.db.models import QuerySet
+from guardian.models import UserObjectPermission
+from guardian.admin import GuardedModelAdmin
+from guardian.shortcuts import get_objects_for_user
+
 from rest_framework.exceptions import NotFound
 
 from apps.tasks.models import (
@@ -84,7 +88,7 @@ def send_user_email(model_admin, request, queryset):
 
 
 @admin.register(Task)
-class TaskAdmin(ModelAdmin):
+class TaskAdmin(GuardedModelAdmin):
     list_display = ('id', 'title', 'status', 'project', 'description', 'parent')
     list_filter = ('status',)
     search_fields = ('title',)
@@ -93,6 +97,25 @@ class TaskAdmin(ModelAdmin):
         update_task_status_true,
         send_user_email
     ]
+
+    def get_queryset(self, request):
+        queryset = super(TaskAdmin, self).get_queryset(request)
+        if request.user.is_superuser:
+            return queryset
+        project_id = list(set(Task.objects.select_related(
+            'project').filter(assigned_to__id=request.user.id).values_list('project__id', flat=True)))
+        return queryset.filter(project_id__in=project_id)
+        # return get_objects_for_user(
+        #     user=request.user,
+        #     perms=[
+        #         'tasks.view_task',
+        #         'tasks.delete_task',
+        #         'tasks.add_task',
+        #         'tasks.change_task'
+        #     ],
+        #     klass=queryset.filter(project_id__in=project_id),
+        #     any_perm=True
+        # )
 
     def save_model(self, request, obj, form, change):
         ignored_keys = []
@@ -127,3 +150,6 @@ class AttachmentAdmin(ModelAdmin):
 @admin.register(Project)
 class ProjectAdmin(ModelAdmin):
     list_display = ('id', 'name', 'owner', 'description', 'created_at', 'updated_at')
+
+
+admin.site.register(UserObjectPermission)
