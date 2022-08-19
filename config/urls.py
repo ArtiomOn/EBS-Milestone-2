@@ -13,10 +13,12 @@ Including another URLconf
     1. Import include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 
 from apps.common.helpers import schema_view
+from config import settings
 
 urlpatterns = [
     path("", schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
@@ -26,3 +28,8 @@ urlpatterns = [
     path('users/', include("apps.users.urls")),
     path('tasks/', include('apps.tasks.urls')),
 ]
+
+urlpatterns += static(
+    settings.MEDIA_URL,
+    document_root=settings.MEDIA_ROOT
+)
