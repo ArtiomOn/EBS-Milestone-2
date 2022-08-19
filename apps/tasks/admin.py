@@ -4,7 +4,7 @@ from django.db.models import QuerySet
 
 from guardian.models import UserObjectPermission
 from guardian.admin import GuardedModelAdmin
-from guardian.shortcuts import get_objects_for_user, assign_perm
+from guardian.shortcuts import get_objects_for_user
 from rest_framework.exceptions import NotFound
 
 from apps.tasks.models import (
@@ -112,11 +112,9 @@ class TaskAdmin(GuardedModelAdmin):
     ]
 
     def get_queryset(self, request):
+        user = request.user
+        Task.objects.assign_user_permission(user=user)
         queryset = super(TaskAdmin, self).get_queryset(request)
-        assign_perm('tasks.view_task', request.user)
-        assign_perm('tasks.add_task', request.user)
-        assign_perm('tasks.delete_task', request.user)
-        assign_perm('tasks.change_task', request.user)
         if request.user.is_superuser:
             return queryset
         else:

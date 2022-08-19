@@ -12,6 +12,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.http import HttpResponse
 from django.template.loader import get_template
+from guardian.shortcuts import assign_perm
 
 from config import settings
 from config.settings import AUTH_USER_MODEL
@@ -32,6 +33,13 @@ class TaskQuerySet(QuerySet):
         return self.filter(
             project_id__in=Project.objects.allowed_to(user).values('id')
         )
+
+    @staticmethod
+    def assign_user_permission(user: User):
+        assign_perm('tasks.view_task', user)
+        assign_perm('tasks.add_task', user)
+        assign_perm('tasks.delete_task', user)
+        assign_perm('tasks.change_task', user)
 
 
 class Task(models.Model):
