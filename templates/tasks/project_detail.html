@@ -4,16 +4,42 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Task</title>
+    <title>Project</title>
     <link rel="stylesheet" href="{% static 'tasks/css/style.css' %}">
 </head>
 <body>
 <hr>
 <div class="task-header">
-    <h1>In your project you have {{ tasks.count }} tasks</h1>
+    <h1>Project detail</h1>
     <hr>
 </div>
 <div class="task-body">
+    <table>
+        <tr>
+            <th>Id</th>
+            <th>Name</th>
+            <th>Owner</th>
+            <th>Logo</th>
+            <th>Description</th>
+            <th>Created at</th>
+            <th>Updated at</th>
+        </tr>
+        {% for project in projects.all %}
+            <tr>
+                <td>{{ project.id }}</td>
+                <td>{{ project.name }}</td>
+                <td>{{ project.owner }}</td>
+                <td>{{ project.logo.all|join:", " }}</td>
+                <td>{{ project.description }}</td>
+                <td>{{ project.created_at }}</td>
+                <td>{{ project.updated_at }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+    <br>
+    <hr>
+    <br>
+    <h1>Project tasks</h1>
     <table>
         <tr>
             <th>Id</th>
@@ -32,7 +58,7 @@
                 <td>{{ task.project }}</td>
                 <td>{{ task.description }}</td>
                 <td>{{ task.status }}</td>
-                <td>{{ task.assigned_to.all|join:', ' }}</td>
+                <td>{{ task.assigned_to.all|join:", " }}</td>
                 {% if task.parent is None %}
                     <td>-</td>
                 {% else %}
@@ -48,12 +74,14 @@
     </table>
     <br>
     {% for task in tasks %}
-        <img src="{% get_media_prefix %}{% for attachment in task.attachment.all %}{{ attachment.file_url }}"
-             alt="{{ attachment.title }}">{% endfor %}
+        {% for attachment in task.attachment.all %}
+            <img src="http://127.0.0.1:8000{% get_media_prefix %}{{ attachment.file_url }}"
+                 alt="{{ attachment.title }}">
+        {% endfor %}
     {% endfor %}
     <br>
     <hr>
-    <h1>In your project you have {{ comments.count }} comments</h1>
+    <h1>Project comments</h1>
     <hr>
     {% for comment in comments %}
         <div class="dialogbox">
@@ -68,13 +96,13 @@
     <br>
     {% for comment in comments %}
         {% for attachment in comment.attachment.all %}
-            <img src="{% get_media_prefix %}{{ attachment.file_url }}"
+            <img src="http://127.0.0.1:8000{% get_media_prefix %}{{ attachment.file_url }}"
                  alt="{{ attachment.title }}">
         {% endfor %}
     {% endfor %}
     <br>
     <hr>
-    <h1>In your project you have {{ timelogs.count }} time logs</h1>
+    <h1>Project time logs</h1>
     <hr>
     <table>
         <tr>
@@ -107,7 +135,7 @@
     <br>
     {% for timelog in timelogs %}
         {% for attachment in timelog.attachment.all %}
-            <img src="{% get_media_prefix %}{{ attachment.file_url }}"
+            <img src="http://127.0.0.1:8000{% get_media_prefix %}{{ attachment.file_url }}"
                  alt="{{ attachment.title }}">
         {% endfor %}
     {% endfor %}

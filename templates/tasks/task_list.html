@@ -10,7 +10,7 @@
 <body>
 <hr>
 <div class="task-header">
-    <h1>Task detail</h1>
+    <h1>In your project you have {{ tasks.count }} tasks</h1>
     <hr>
 </div>
 <div class="task-body">
@@ -48,12 +48,14 @@
     </table>
     <br>
     {% for task in tasks %}
-        <img src="{% get_media_prefix %}{% for attachment in task.attachment.all %}{{ attachment.file_url }}"
-             alt="{{ attachment.title }}">{% endfor %}
+        {% for attachment in task.attachment.all %}
+            <img src="http://127.0.0.1:8000{% get_media_prefix %}{{ attachment.file_url }}"
+                 alt="{{ attachment.title }}">
+        {% endfor %}
     {% endfor %}
     <br>
     <hr>
-    <h1>Task comments</h1>
+    <h1>In your project you have {{ comments.count }} comments</h1>
     <hr>
     {% for comment in comments %}
         <div class="dialogbox">
@@ -68,13 +70,13 @@
     <br>
     {% for comment in comments %}
         {% for attachment in comment.attachment.all %}
-            <img src="{% get_media_prefix %}{{ attachment.file_url }}"
+            <img src="http://127.0.0.1:8000{% get_media_prefix %}{{ attachment.file_url }}"
                  alt="{{ attachment.title }}">
         {% endfor %}
     {% endfor %}
     <br>
     <hr>
-    <h1>Task time logs</h1>
+    <h1>In your project you have {{ timelogs.count }} time logs</h1>
     <hr>
     <table>
         <tr>
@@ -107,7 +109,7 @@
     <br>
     {% for timelog in timelogs %}
         {% for attachment in timelog.attachment.all %}
-            <img src="{% get_media_prefix %}{{ attachment.file_url }}"
+            <img src="http://127.0.0.1:8000{% get_media_prefix %}{{ attachment.file_url }}"
                  alt="{{ attachment.title }}">
         {% endfor %}
     {% endfor %}
