@@ -1,6 +1,5 @@
-from django.template.defaultfilters import filesizeformat
 from django.contrib.auth import get_user_model
-
+from django.template.defaultfilters import filesizeformat
 from rest_framework import serializers
 
 from apps.tasks.models import (
