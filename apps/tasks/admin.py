@@ -21,11 +21,11 @@ class FileSizeFilter(SimpleListFilter):
     parameter_name = 'file_size'
 
     def lookups(self, request, model_admin):
-        return (
-            ('1Mb', ('≤1Mb')),
-            ('5-10Mb', ('5Mb-10Mb')),
-            ('10Mb', ('≥10Mb')),
-        )
+        return [
+            ('1Mb', '≤1Mb'),
+            ('5-10Mb', '5Mb-10Mb'),
+            ('10Mb', '≥10Mb')
+        ]
 
     def queryset(self, request, queryset):
         if self.value() == '1Mb':
@@ -45,9 +45,14 @@ class FileSizeFilter(SimpleListFilter):
 
 @admin.action(description='Update task status to True')
 def update_task_status_true(model_admin, request, queryset):
-    status = queryset.values_list('status', flat=True)
+    status = queryset.values_list(
+        'status',
+        flat=True
+    )
     if not all(list(status)):
-        queryset.update(status=True)
+        queryset.update(
+            status=True
+        )
     else:
         raise NotFound
 

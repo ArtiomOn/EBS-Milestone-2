@@ -353,7 +353,9 @@ class TimeLogViewSet(
         serializer.total_time = queryset.aggregate(
             Sum('duration')
         )
-        return Response(serializer.total_time)
+        return Response(
+            serializer.total_time
+        )
 
 
 class AttachmentViewSet(
