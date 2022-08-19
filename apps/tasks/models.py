@@ -1,12 +1,17 @@
 from datetime import datetime
 from pathlib import Path
+from typing import Union
 
+import pdfkit
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.mail import send_mail
 from django.db import models
+from django.db.models import QuerySet
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.http import HttpResponse
+from django.template.loader import get_template
 
 from config import settings
 from config.settings import AUTH_USER_MODEL
@@ -22,7 +27,7 @@ __all__ = [
 ]
 
 
-class TaskQuerySet(models.QuerySet):
+class TaskQuerySet(QuerySet):
     def allowed_to(self, user: User):
         return self.filter(
             project_id__in=Project.objects.allowed_to(user).values('id')
@@ -68,6 +73,34 @@ class Task(models.Model):
     def __str__(self):
         return self.title
 
+    @staticmethod
+    def send_user_email(message: str, subject: str, recipient: Union[QuerySet, set]):
+        send_mail(
+            message=message,
+            subject=subject,
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=list(recipient),
+            fail_silently=False
+        )
+
+    @staticmethod
+    def html_convert_pdf(template: str, output_path: str, context: dict, css: str):
+        # Convert html file to pdf
+        template = get_template(template)
+        html = template.render(context)
+        options = {
+            '--enable-local-file-access': None
+        }
+        return HttpResponse(
+            pdfkit.from_string(
+                input=html,
+                output_path=output_path,
+                css=css,
+                options=options
+            ),
+            content_type='application/pdf'
+        )
+
 
 class Comment(models.Model):
     text = models.TextField()
@@ -97,7 +130,26 @@ class Comment(models.Model):
         return f'{self.id}'
 
 
+class TimeLogQuerySet(QuerySet):
+    def user_start_timer(self, task_id: int, user: User):
+        self.create(
+            task_id=task_id,
+            user=user,
+            started_at=datetime.now()
+        )
+
+    def user_stop_timer(self, user: User):
+        instance = self.filter(
+            duration=None,
+            user=user
+        ).first()
+        instance.duration = datetime.now() - instance.started_at
+        instance.save()
+
+
 class TimeLog(models.Model):
+    objects = TimeLogQuerySet.as_manager()
+
     task = models.ForeignKey(
         Task,
         on_delete=models.CASCADE,
@@ -173,7 +225,7 @@ class Attachment(models.Model):
         super(Attachment, self).save(force_insert, force_update, using, update_fields)
 
 
-class ProjectQuerySet(models.QuerySet):
+class ProjectQuerySet(QuerySet):
     def allowed_to(self, user: User):
         return self.filter(
             id__in=Project.objects.filter(member__id=user.id)
