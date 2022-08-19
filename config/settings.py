@@ -182,12 +182,10 @@ USE_TZ = False
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/files/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/files/')
 
 DATE_FORMAT = "%Y-%m-%d %H:%m"
-
-# TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 
 NOSE_ARGS = [
     '--with-coverage',
