@@ -172,7 +172,6 @@ class TaskViewSet(
         permission_classes=(IsAuthenticated,)
     )
     def task_list_convert_pdf(self, request, *args, **kwargs):
-        css_path = 'E:/EBS/EBS-Milestone-2/static/css/style.css'
         template_name = 'tasks/task_list.html'
         pdf_name = 'E:/EBS/EBS-Milestone-2/media/pdf/task_list.pdf'
         task_queryset = Task.objects.all()
@@ -186,7 +185,6 @@ class TaskViewSet(
         return Task.html_convert_pdf(
             template=template_name,
             output_path=pdf_name,
-            css=css_path,
             context=context
         )
 
@@ -197,7 +195,6 @@ class TaskViewSet(
     )
     def task_detail_convert_pdf(self, request, *args, **kwargs):
         instance = self.get_object()
-        css_path = 'E:/EBS/EBS-Milestone-2/static/css/style.css'
         template_name = 'tasks/task_detail.html'
         pdf_name = f'E:/EBS/EBS-Milestone-2/media/pdf/task_detail__id_{instance.id}.pdf'
         task_queryset = Task.objects.filter(
@@ -217,7 +214,6 @@ class TaskViewSet(
         return Task.html_convert_pdf(
             template=template_name,
             output_path=pdf_name,
-            css=css_path,
             context=context
         )
 
@@ -397,7 +393,6 @@ class ProjectViewSet(
     )
     def project_detail_convert_pdf(self, request, *args, **kwargs):
         instance = self.get_object()
-        css_path = 'E:/EBS/EBS-Milestone-2/static/css/style.css'
         pdf_name = f'E:/EBS/EBS-Milestone-2/media/pdf/project_detail__id_{instance.id}.pdf'
         template_name = 'tasks/project_detail.html'
         instance_project = self.get_queryset(
@@ -422,6 +417,5 @@ class ProjectViewSet(
         return Task.html_convert_pdf(
             template=template_name,
             output_path=pdf_name,
-            css=css_path,
             context=context
         )

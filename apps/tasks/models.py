@@ -84,7 +84,7 @@ class Task(models.Model):
         )
 
     @staticmethod
-    def html_convert_pdf(template: str, output_path: str, context: dict, css: str):
+    def html_convert_pdf(template: str, output_path: str, context: dict):
         # Convert html file to pdf
         template = get_template(template)
         html = template.render(context)
@@ -95,7 +95,6 @@ class Task(models.Model):
             pdfkit.from_string(
                 input=html,
                 output_path=output_path,
-                css=css,
                 options=options
             ),
             content_type='application/pdf'
