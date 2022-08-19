@@ -1,6 +1,5 @@
 from django.contrib import admin
 from django.contrib.admin import ModelAdmin, SimpleListFilter
-from django.core.mail import send_mail
 from django.db.models import QuerySet
 
 from guardian.models import UserObjectPermission
@@ -15,7 +14,6 @@ from apps.tasks.models import (
     Attachment,
     Project
 )
-from config import settings
 
 
 class FileSizeFilter(SimpleListFilter):
@@ -32,16 +30,16 @@ class FileSizeFilter(SimpleListFilter):
     def queryset(self, request, queryset):
         if self.value() == '1Mb':
             return queryset.filter(
-                file_size__lte=1_000_000
+                file_size__lte=1_048_576
             )
         if self.value() == '5-10Mb':
             return queryset.filter(
-                file_size__gte=1_000_000,
-                file_size__lte=10_000_000
+                file_size__gte=1_048_576,
+                file_size__lte=10_485_760
             )
         if self.value() == '10Mb':
             return queryset.filter(
-                file_size__gte=10_000_000
+                file_size__gte=10_485_760
             )
 
 
@@ -73,12 +71,10 @@ def update_task_status_false(model_admin, request, queryset):
                 'assigned_to__email',
                 flat=True
             )
-            send_mail(
+            Task.send_user_email(
                 message='Admin changed you task status to Undone!',
                 subject=f'You have one undone Task. ID: {tasks_id}',
-                from_email=settings.EMAIL_HOST_USER,
-                recipient_list=list(user_email),
-                fail_silently=False
+                recipient=user_email,
             )
     else:
         raise NotFound
@@ -92,12 +88,10 @@ def send_user_email(model_admin, request, queryset):
         'assigned_to__email',
         flat=True
     )
-    send_mail(
+    Task.send_user_email(
         message='test message from django admin',
         subject='test subject from django admin',
-        from_email=settings.EMAIL_HOST_USER,
-        recipient_list=list(queryset),
-        fail_silently=False
+        recipient=queryset
     )
 
 
