@@ -2,13 +2,12 @@ from pathlib import Path
 
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import UserManager, AbstractUser
-from django.db.models.signals import m2m_changed
+from django.db import models
+from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
-from django.db.models import EmailField, ManyToManyField
 
 from apps.tasks.models import Attachment
-
 
 __all__ = [
     'CustomUserManager',
@@ -35,15 +34,17 @@ class CustomUserManager(UserManager):
 
 
 class CustomUser(AbstractUser):
-    email = EmailField(
+    email = models.EmailField(
         _('email address'),
         blank=False,
         unique=True
     )
-    profile_image = ManyToManyField(
+    profile_image = models.ForeignKey(
         Attachment,
-        'user_attachment',
-        blank=True
+        on_delete=models.SET_NULL,
+        related_name='user_attachment',
+        blank=True,
+        null=True
     )
     objects = CustomUserManager()
 
@@ -54,15 +55,10 @@ class CustomUser(AbstractUser):
         app_label = 'users'
 
 
-@receiver(
-    signal=m2m_changed,
-    sender=CustomUser.profile_image.through,
-    dispatch_uid='check_image_extension',
-    weak=False
-)
-def check_image_extension(sender, instance, action, reverse, model, pk_set, **kwargs):
-    if action == 'pre_add':
-        instance: Attachment = instance
-        extension = Path(instance.file_url.name).suffix
+@receiver(pre_save, sender=CustomUser, dispatch_uid='check_image_extension')
+def send_email_user(sender, instance, **kwargs):
+    instance: CustomUser = instance
+    if instance.profile_image is not None:
+        extension = Path(instance.profile_image.file_url.name).suffix
         if extension not in ['.jpg', '.png', '.jpeg']:
             raise ValueError('Extensions are jpg, png, jpeg')
