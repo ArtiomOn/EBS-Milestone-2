@@ -1,9 +1,8 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from django.contrib.auth import get_user_model
-from django.core.mail import send_mail
 from django.db.models import Sum
-
+from django.shortcuts import get_object_or_404
 from rest_framework import status, filters
 from rest_framework.decorators import action
 from rest_framework.mixins import (
@@ -17,7 +16,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from wkhtmltopdf.views import PDFTemplateResponse
 
 from apps.tasks.filtersets import TaskFilterSet
 from apps.tasks.models import (
@@ -39,7 +37,6 @@ from apps.tasks.serializers import (
     AttachmentSerializer,
     ProjectSerializer
 )
-from config import settings
 
 User = get_user_model()
 
@@ -123,14 +120,19 @@ class TaskViewSet(
             raise_exception=True
         )
         serializer.save()
-        instance.assigned_to = serializer.validated_data['assigned_to']
-        user_email = User.objects.get(
-            id=instance.assigned_to.id
-        ).email
-        self.send_email_task(
-            message=f'Task with id:{instance.id} is assigned to you',
-            subject='Task assign to you',
-            recipient_list=[user_email]
+        instance.assigned_to.set = serializer.validated_data['assigned_to']
+        user_email = Task.objects.filter(
+            id=instance.id
+        ).select_related(
+            'assigned_to'
+        ).values_list(
+            'assigned_to__email',
+            flat=True
+        )
+        Task.send_user_email(
+            subject=f'Task with id:{instance.id} is assigned to you',
+            message='Task assign to you',
+            recipient=user_email
         )
         return Response(status=status.HTTP_200_OK)
 
@@ -148,7 +150,6 @@ class TaskViewSet(
         )
         serializer.is_valid(raise_exception=True)
         serializer.save(status=True)
-
         user_email = set(Comment.objects.select_related(
             'task__assigned_to'
         ).filter(
@@ -158,10 +159,10 @@ class TaskViewSet(
             flat=True
         ))
         if user_email:
-            self.send_email_task(
+            Task.send_user_email(
                 message='commented task is completed',
                 subject='commented task is completed',
-                recipient_list=list(user_email)
+                recipient=user_email
             )
         return Response(status=status.HTTP_200_OK)
 
@@ -171,22 +172,22 @@ class TaskViewSet(
         permission_classes=(IsAuthenticated,)
     )
     def task_list_convert_pdf(self, request, *args, **kwargs):
+        css_path = 'E:/EBS/EBS-Milestone-2/static/css/style.css'
+        template_name = 'tasks/task_list.html'
+        pdf_name = 'E:/EBS/EBS-Milestone-2/media/pdf/task_list.pdf'
         task_queryset = Task.objects.all()
         comment_queryset = Comment.objects.all()
         timelog_queryset = TimeLog.objects.all()
-
-        template_name = 'tasks/task_list.html'
-        pdf_name = 'task_list.pdf'
         context = {
             'tasks': task_queryset,
             'comments': comment_queryset,
             'timelogs': timelog_queryset
         }
-        return self.generate_pdf(
-            request=request,
-            template_name=template_name,
-            context=context,
-            file_name=pdf_name
+        return Task.html_convert_pdf(
+            template=template_name,
+            output_path=pdf_name,
+            css=css_path,
+            context=context
         )
 
     @action(
@@ -196,51 +197,29 @@ class TaskViewSet(
     )
     def task_detail_convert_pdf(self, request, *args, **kwargs):
         instance = self.get_object()
-        task_queryset = Task.objects.all(
-        ).filter(
+        css_path = 'E:/EBS/EBS-Milestone-2/static/css/style.css'
+        template_name = 'tasks/task_detail.html'
+        pdf_name = f'E:/EBS/EBS-Milestone-2/media/pdf/task_detail__id_{instance.id}.pdf'
+        task_queryset = Task.objects.filter(
             id=instance.id
         )
-        comment_queryset = Comment.objects.all(
-        ).filter(
+        comment_queryset = Comment.objects.filter(
             task_id=instance.id
         )
-        timelog_queryset = TimeLog.objects.all(
-        ).filter(
+        timelog_queryset = TimeLog.objects.filter(
             task_id=instance.id
         )
-
-        pdf_name = 'task_detail.pdf'
-        template_name = 'tasks/task_detail.html',
         context = {
             'tasks': task_queryset,
             'comments': comment_queryset,
             'timelogs': timelog_queryset
         }
-
-        return self.generate_pdf(
-            request=request,
-            template_name=template_name,
-            context=context,
-            file_name=pdf_name
-        )
-
-    @classmethod
-    def send_email_task(cls, message, subject, recipient_list):
-        send_mail(
-            message=message,
-            subject=subject,
-            from_email=settings.EMAIL_HOST_USER,
-            recipient_list=recipient_list,
-            fail_silently=False
-        )
-
-    @staticmethod
-    def generate_pdf(request, context, template_name, file_name):
-        return PDFTemplateResponse(
-            request=request,
-            context=context,
+        return Task.html_convert_pdf(
             template=template_name,
-            filename=file_name)
+            output_path=pdf_name,
+            css=css_path,
+            context=context
+        )
 
 
 class TaskCommentViewSet(
@@ -275,20 +254,10 @@ class TaskCommentViewSet(
             'assigned_to__email',
             flat=True
         )
-        self.send_email_comment(
+        Task.send_user_email(
             message=f'You task with id:{task_id} is commented',
             subject='Your task is commented',
-            recipient_list=list(user_email)
-        )
-
-    @classmethod
-    def send_email_comment(cls, message, subject, recipient_list):
-        send_mail(
-            message=message,
-            subject=subject,
-            from_email=settings.EMAIL_HOST_USER,
-            recipient_list=recipient_list,
-            fail_silently=False
+            recipient=user_email
         )
 
 
@@ -335,11 +304,12 @@ class TaskTimeLogViewSet(
         detail=False
     )
     def start_timer(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        queryset.create(
-            task_id=self.kwargs.get('task__pk'),
-            user=self.request.user,
-            started_at=datetime.now()
+        task_id = get_object_or_404(
+            self.kwargs.get('task__pk')
+        )
+        TimeLog.objects.user_start_timer(
+            task_id=task_id,
+            user=request.user
         )
         return Response(status=status.HTTP_201_CREATED)
 
@@ -349,13 +319,9 @@ class TaskTimeLogViewSet(
         detail=False
     )
     def stop_timer(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        instance = queryset.filter(
-            duration=None,
-            user=self.request.user
-        ).first()
-        instance.duration = datetime.now() - instance.started_at
-        instance.save()
+        TimeLog.objects.user_stop_timer(
+            user=request.user
+        )
         return Response(status=status.HTTP_200_OK)
 
 
@@ -430,44 +396,32 @@ class ProjectViewSet(
         detail=True
     )
     def project_detail_convert_pdf(self, request, *args, **kwargs):
-        template_name = '../templates/tasks/project_detail.html'
-        pdf_name = 'project.pdf'
         instance = self.get_object()
-        project = Project.objects.filter(
+        css_path = 'E:/EBS/EBS-Milestone-2/static/css/style.css'
+        pdf_name = f'E:/EBS/EBS-Milestone-2/media/pdf/project_detail__id_{instance.id}.pdf'
+        template_name = 'tasks/project_detail.html'
+        instance_project = self.get_queryset(
+        ).filter(
             id=instance.id
         )
-        task = Task.objects.filter(
+        instance_tasks = Task.objects.filter(
             project_id=instance.id
         )
-        task_id = list(Task.objects.filter(
-            project_id=instance.id
-        ).values_list(
-            'id', flat=True
-        ))
-        comment = Comment.objects.filter(
-            task_id__in=task_id
+        instance_comments = Comment.objects.filter(
+            task__project=instance
         )
-        timelog = TimeLog.objects.filter(
-            task_id__in=task_id
+        instance_timelogs = TimeLog.objects.filter(
+            task__project=instance
         )
         context = {
-            'projects': project,
-            'tasks': task,
-            'comments': comment,
-            'timelogs': timelog,
+            'projects': instance_project,
+            'tasks': instance_tasks,
+            'comments': instance_comments,
+            'timelogs': instance_timelogs,
         }
-
-        return self.generate_pdf(
-            request=request,
-            template_name=template_name,
-            context=context,
-            file_name=pdf_name
-        )
-
-    @staticmethod
-    def generate_pdf(request, context, template_name, file_name):
-        return PDFTemplateResponse(
-            request=request,
-            context=context,
+        return Task.html_convert_pdf(
             template=template_name,
-            filename=file_name)
+            output_path=pdf_name,
+            css=css_path,
+            context=context
+        )
