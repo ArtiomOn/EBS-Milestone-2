@@ -64,7 +64,7 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = '__all__'
         extra_kwargs = {
             'task': {'read_only': True},
-            'assigned_to': {'read_only': True}
+            'owner': {'read_only': True}
         }
 
 
