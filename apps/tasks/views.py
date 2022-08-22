@@ -1,8 +1,8 @@
+import datetime
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
-from django.shortcuts import get_object_or_404
 from rest_framework import status, filters
 from rest_framework.decorators import action
 from rest_framework.mixins import (
@@ -10,6 +10,7 @@ from rest_framework.mixins import (
     RetrieveModelMixin,
     CreateModelMixin,
     DestroyModelMixin,
+    UpdateModelMixin,
 )
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
@@ -23,7 +24,7 @@ from apps.tasks.models import (
     Comment,
     TimeLog,
     Attachment,
-    Project
+    Project,
 )
 from apps.tasks.serializers import (
     TaskSerializer,
@@ -35,7 +36,7 @@ from apps.tasks.serializers import (
     TimeLogCreateSerializer,
     TimeLogUserDetailSerializer,
     AttachmentSerializer,
-    ProjectSerializer
+    ProjectSerializer,
 )
 
 User = get_user_model()
@@ -120,19 +121,10 @@ class TaskViewSet(
             raise_exception=True
         )
         serializer.save()
-        instance.assigned_to.set = serializer.validated_data['assigned_to']
-        user_email = Task.objects.filter(
-            id=instance.id
-        ).select_related(
-            'assigned_to'
-        ).values_list(
-            'assigned_to__email',
-            flat=True
-        )
-        Task.send_user_email(
+        instance.send_user_email(
             subject=f'Task with id:{instance.id} is assigned to you',
             message='Task assign to you',
-            recipient=user_email
+            recipient=request.user.email
         )
         return Response(status=status.HTTP_200_OK)
 
@@ -150,16 +142,9 @@ class TaskViewSet(
         )
         serializer.is_valid(raise_exception=True)
         serializer.save(status=True)
-        user_email = set(Comment.objects.select_related(
-            'task__assigned_to'
-        ).filter(
-            task_id=instance.id
-        ).values_list(
-            'assigned_to__email',
-            flat=True
-        ))
+        user_email = request.user.email
         if user_email:
-            Task.send_user_email(
+            instance.send_user_email(
                 message='commented task is completed',
                 subject='commented task is completed',
                 recipient=user_email
@@ -173,19 +158,16 @@ class TaskViewSet(
     )
     def task_list_convert_pdf(self, request, *args, **kwargs):
         template_name = 'tasks/task_list.html'
-        pdf_name = 'E:/EBS/EBS-Milestone-2/media/pdf/task_list.pdf'
-        task_queryset = Task.objects.all()
-        comment_queryset = Comment.objects.all()
-        timelog_queryset = TimeLog.objects.all()
+        filename = 'task_list.pdf'
         context = {
-            'tasks': task_queryset,
-            'comments': comment_queryset,
-            'timelogs': timelog_queryset
+            'tasks': self.get_queryset(),
         }
-        return Task.html_convert_pdf(
+
+        return self.queryset.model.html_convert_pdf(
+            request=request,
             template=template_name,
-            output_path=pdf_name,
-            context=context
+            context=context,
+            filename=filename
         )
 
     @action(
@@ -196,25 +178,18 @@ class TaskViewSet(
     def task_detail_convert_pdf(self, request, *args, **kwargs):
         instance = self.get_object()
         template_name = 'tasks/task_detail.html'
-        pdf_name = f'E:/EBS/EBS-Milestone-2/media/pdf/task_detail__id_{instance.id}.pdf'
-        task_queryset = Task.objects.filter(
-            id=instance.id
-        )
-        comment_queryset = Comment.objects.filter(
-            task_id=instance.id
-        )
-        timelog_queryset = TimeLog.objects.filter(
-            task_id=instance.id
-        )
+        filename = f'task_detail__id_{instance.id}.pdf'
+
         context = {
-            'tasks': task_queryset,
-            'comments': comment_queryset,
-            'timelogs': timelog_queryset
+            'tasks': instance,
+            'comments': instance.comments.all(),
+            'timelogs': instance.time_logs.all()
         }
-        return Task.html_convert_pdf(
+        return instance.html_convert_pdf(
+            request=request,
             template=template_name,
-            output_path=pdf_name,
-            context=context
+            context=context,
+            filename=filename
         )
 
 
@@ -238,19 +213,12 @@ class TaskCommentViewSet(
 
     def perform_create(self, serializer):
         task_id = self.kwargs.get('task__pk')
-        serializer.save(
-            assigned_to=self.request.user,
+        instance = serializer.save(
+            owner=self.request.user,
             task_id=task_id
         )
-        user_email = Task.objects.select_related(
-            'assigned_to'
-        ).filter(
-            id=task_id
-        ).values_list(
-            'assigned_to__email',
-            flat=True
-        )
-        Task.send_user_email(
+        user_email = self.request.user.email
+        instance.task.send_user_email(
             message=f'You task with id:{task_id} is commented',
             subject='Your task is commented',
             recipient=user_email
@@ -300,12 +268,11 @@ class TaskTimeLogViewSet(
         detail=False
     )
     def start_timer(self, request, *args, **kwargs):
-        task_id = get_object_or_404(
-            self.kwargs.get('task__pk')
-        )
-        TimeLog.objects.user_start_timer(
+        task_id = self.kwargs.get('task__pk')
+        self.queryset.create(
             task_id=task_id,
-            user=request.user
+            user=self.request.user,
+            started_at=datetime.datetime.now()
         )
         return Response(status=status.HTTP_201_CREATED)
 
@@ -315,9 +282,12 @@ class TaskTimeLogViewSet(
         detail=False
     )
     def stop_timer(self, request, *args, **kwargs):
-        TimeLog.objects.user_stop_timer(
-            user=request.user
-        )
+        instance = self.queryset.filter(
+            duration=None,
+            user=self.request.user
+        ).first()
+        instance.duration = datetime.datetime.now() - instance.started_at
+        instance.save()
         return Response(status=status.HTTP_200_OK)
 
 
@@ -329,12 +299,8 @@ class TimeLogViewSet(
     serializer_class = TimeLogUserDetailSerializer
     authentication_classes = [JWTAuthentication]
     permission_classes = (IsAuthenticated,)
-
-    def get_queryset(self):
-        return self.filter_queryset(
-            self.queryset.order_by(
-                '-duration'
-            ))[:5]
+    filter_backends = [filters.OrderingFilter]
+    ordering = ['-duration']
 
     @action(
         methods=['get'],
@@ -346,21 +312,15 @@ class TimeLogViewSet(
             user=self.request.user,
             started_at__month=TimeLog.current_month(),
         )
-        serializer = self.get_serializer(
-            queryset,
-            many=True
-        )
-        serializer.total_time = queryset.aggregate(
-            Sum('duration')
-        )
         return Response(
-            serializer.total_time
+            queryset.aggregate(
+                total_time=Sum('duration')
+            )
         )
 
 
 class AttachmentViewSet(
     ListModelMixin,
-    CreateModelMixin,
     GenericViewSet
 ):
     queryset = Attachment.objects.all()
@@ -373,16 +333,17 @@ class AttachmentViewSet(
             data=request.data
         )
         serializer.is_valid(raise_exception=True)
-        instance = serializer.save(
+        serializer.save(
             user=self.request.user
         )
-        return Response(
-            self.get_serializer(
-                instance=instance
-            ).data)
+        return Response(serializer.data)
 
 
 class ProjectViewSet(
+    ListModelMixin,
+    RetrieveModelMixin,
+    UpdateModelMixin,
+    CreateModelMixin,
     GenericViewSet
 ):
     queryset = Project.objects.all()
@@ -395,29 +356,15 @@ class ProjectViewSet(
     )
     def project_detail_convert_pdf(self, request, *args, **kwargs):
         instance = self.get_object()
-        pdf_name = f'E:/EBS/EBS-Milestone-2/media/pdf/project_detail__id_{instance.id}.pdf'
+        filename = f'project_detail__id_{instance.id}.pdf'
         template_name = 'tasks/project_detail.html'
-        instance_project = self.get_queryset(
-        ).filter(
-            id=instance.id
-        )
-        instance_tasks = Task.objects.filter(
-            project_id=instance.id
-        )
-        instance_comments = Comment.objects.filter(
-            task__project=instance
-        )
-        instance_timelogs = TimeLog.objects.filter(
-            task__project=instance
-        )
         context = {
-            'projects': instance_project,
-            'tasks': instance_tasks,
-            'comments': instance_comments,
-            'timelogs': instance_timelogs,
+            'projects': instance,
+            'tasks': instance.task_set.all()
         }
-        return Task.html_convert_pdf(
+        return instance.task_set.model.html_convert_pdf(
+            request=request,
             template=template_name,
-            output_path=pdf_name,
-            context=context
+            context=context,
+            filename=filename
         )
