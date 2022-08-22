@@ -1,10 +1,8 @@
 from django.contrib.auth import get_user_model
 
-from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.generics import get_object_or_404
 from rest_framework.mixins import ListModelMixin
-from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -12,8 +10,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.users.serializers import (
     UserSerializer,
-    UserCreateSerializer,
-    UserListSerializer
 )
 
 User = get_user_model()
@@ -27,9 +23,9 @@ class UserViewSet(
     ListModelMixin,
     GenericViewSet
 ):
-    serializer_class = UserListSerializer
+    serializer_class = UserSerializer
     queryset = User.objects.all()
-    permission_classes = (IsAdminUser,)
+    permission_classes = (AllowAny,)
 
     authentication_classes = [JWTAuthentication]
 
@@ -41,17 +37,15 @@ class UserViewSet(
         permission_classes=(AllowAny,)
     )
     def register(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(
+            data=request.data
+        )
         serializer.is_valid(raise_exception=True)
 
-        user = User.objects.create(
-            first_name=serializer.validated_data['first_name'],
-            last_name=serializer.validated_data['last_name'],
-            username=serializer.validated_data['email'],
-            email=serializer.validated_data['email'],
-            is_superuser=False,
-            is_staff=False
+        user = serializer.save(
+            username=serializer.validated_data['email']
         )
+
         user.set_password(serializer.validated_data['password'])
         user.save()
         refresh = RefreshToken.for_user(user)
@@ -59,26 +53,3 @@ class UserViewSet(
             'refresh': str(refresh),
             'access': str(refresh.access_token)
         })
-
-    @action(
-        methods=['post'],
-        detail=False,
-        url_path='login',
-        serializer_class=UserCreateSerializer,
-        permission_classes=(AllowAny,)
-    )
-    def login(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=False)
-        user = get_object_or_404(
-            User,
-            email=serializer.data['email']
-        )
-        if user.check_password(serializer.data['password']):
-            refresh = RefreshToken.for_user(user)
-
-            return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token)
-            })
-        return Response(status=status.HTTP_404_NOT_FOUND)
