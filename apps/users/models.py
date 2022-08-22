@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import UserManager, AbstractUser
 from django.db import models
 from django.db.models.signals import pre_save
@@ -17,20 +16,8 @@ __all__ = [
 
 class CustomUserManager(UserManager):
 
-    def create_superuser(self, username=None, email=None, password=None, **extra_fields):
-        return super(CustomUserManager, self).create_superuser(username, email, password, **extra_fields)
-
-    def _create_user(self, username=None, email=None, password=None, **extra_fields):
-        email = self.normalize_email(email)
-
-        user = self.model(
-            email=email,
-            username=email,
-            **extra_fields
-        )
-        user.password = make_password(password)
-        user.save(using=self._db)
-        return user
+    def create_superuser(self, email=None, password=None, **extra_fields):
+        return super(CustomUserManager, self).create_superuser(email, password, **extra_fields)
 
 
 class CustomUser(AbstractUser):
