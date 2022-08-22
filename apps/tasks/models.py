@@ -2,7 +2,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Union
 
-import pdfkit
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.mail import send_mail
@@ -10,9 +9,10 @@ from django.db import models
 from django.db.models import QuerySet
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.http import HttpResponse
-from django.template.loader import get_template
+
 from guardian.shortcuts import assign_perm
+from rest_framework.request import Request
+from wkhtmltopdf.views import PDFTemplateResponse
 
 from config import settings
 from config.settings import AUTH_USER_MODEL
@@ -87,25 +87,18 @@ class Task(models.Model):
             message=message,
             subject=subject,
             from_email=settings.EMAIL_HOST_USER,
-            recipient_list=list(recipient),
+            recipient_list=[recipient],
             fail_silently=False
         )
 
     @staticmethod
-    def html_convert_pdf(template: str, output_path: str, context: dict):
+    def html_convert_pdf(request: Request, template: str, context: dict, filename: str):
         # Convert html file to pdf
-        template = get_template(template)
-        html = template.render(context)
-        options = {
-            '--enable-local-file-access': None
-        }
-        return HttpResponse(
-            pdfkit.from_string(
-                input=html,
-                output_path=output_path,
-                options=options
-            ),
-            content_type='application/pdf'
+        return PDFTemplateResponse(
+            request=request,
+            context=context,
+            template=template,
+            filename=filename
         )
 
 
@@ -117,10 +110,9 @@ class Comment(models.Model):
         null=True,
         related_name='comments'
     )
-    assigned_to = models.ForeignKey(
+    owner = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        null=True,
         related_name='comments'
     )
     attachment = models.ManyToManyField(
