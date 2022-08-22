@@ -265,7 +265,7 @@ class TaskTestCase(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            str(Task.objects.get(id=task_id).assigned_to),
+            str(Task.objects.get(id=task_id).owner),
             User.objects.get(id=user_id).email
         )
 
@@ -284,7 +284,7 @@ class TaskTestCase(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            str(Task.objects.get(id=task_id).assigned_to),
+            str(Task.objects.get(id=task_id).owner),
             User.objects.get(id=user_id).email
         )
 
