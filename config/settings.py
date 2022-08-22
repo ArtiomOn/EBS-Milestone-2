@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'django_nose',
     'django_extensions',
+    'django_filters',
     'debug_toolbar',
     'django_celery_beat',
     'django_celery_results',
