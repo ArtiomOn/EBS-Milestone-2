@@ -147,7 +147,7 @@ class TaskAdmin(GuardedModelAdmin):
 
 @admin.register(Comment)
 class CommentAdmin(ModelAdmin):
-    list_display = ('id', 'task_id', 'assigned_to')
+    list_display = ('id', 'task_id', 'owner')
 
 
 @admin.register(TimeLog)
