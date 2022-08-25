@@ -1,9 +1,8 @@
 import datetime
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
-
 from rest_framework import status, filters
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
@@ -344,7 +343,7 @@ class TimeLogViewSet(
     def time_log_month(self, request, *args, **kwargs):
         queryset = self.queryset.filter(
             user=self.request.user,
-            started_at__month=TimeLog.current_month(),
+            started_at__month=datetime.now().strftime('%m'),
         )
         return Response(
             queryset.aggregate(

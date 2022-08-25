@@ -1,9 +1,8 @@
 from django.contrib import admin
 from django.contrib.admin import ModelAdmin, SimpleListFilter
 from django.db.models import QuerySet
-
-from guardian.models import UserObjectPermission
 from guardian.admin import GuardedModelAdmin
+from guardian.models import UserObjectPermission
 from guardian.shortcuts import get_objects_for_user
 
 from apps.tasks.models import (
@@ -42,6 +41,7 @@ class FileSizeFilter(SimpleListFilter):
             )
 
 
+# noinspection PyUnusedLocal
 @admin.action(description='Update task status to True')
 def update_task_status_true(model_admin, request, queryset):
     status = list(queryset.values_list(
@@ -77,6 +77,7 @@ def update_task_status_false(model_admin, request, queryset):
             continue
 
 
+# noinspection PyUnusedLocal
 @admin.action(description='Send email to user')
 def send_user_email(model_admin, request, queryset):
     model_admin.model.send_user_email(
