@@ -2,7 +2,7 @@ from celery import shared_task
 from django.core.mail import send_mail
 
 from apps.tasks.models import Task
-from config import settings
+from django.conf import settings
 
 __all__ = [
     'send_email'
