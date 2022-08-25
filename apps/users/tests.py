@@ -18,10 +18,14 @@ class UserTestCase(APITestCase):
     fixtures = ['user_fixtures.json']
 
     def setUp(self):
-        self.simple_user = User.objects.get(email='user@example.com')
-
-        self.admin_user = User.objects.get(email='admin@admin.com')
-        self.refresh = RefreshToken.for_user(self.admin_user)
+        self.simple_user = User.objects.get(
+            email='user@example.com'
+        )
+        self.admin_user = User.objects.get(
+            email='admin@admin.com'
+        )
+        self.simple_user_refresh = RefreshToken.for_user(self.simple_user)
+        self.admin_user_refresh = RefreshToken.for_user(self.admin_user)
 
     def test_simple_user_access_token(self):
         # Simple user get access token
@@ -29,16 +33,23 @@ class UserTestCase(APITestCase):
             'email': self.simple_user.email,
             'password': 'string'
         }
-        response = self.client.post(path='/users/token/', data=data)
+        response = self.client.post(
+            path='/users/token/access/',
+            data=data,
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_admin_user_access_token(self):
         # Admin user get access token
         data = {
             'email': self.admin_user.email,
-            'password': self.admin_user_password
+            'password': 'admin'
         }
-        response = self.client.post(path='/users/token/', data=data)
+        response = self.client.post(
+            path='/users/token/access/',
+            data=data,
+
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_simple_user_refresh_token(self):
@@ -46,7 +57,11 @@ class UserTestCase(APITestCase):
         data = {
             'refresh': str(self.simple_user_refresh)
         }
-        response = self.client.post(path='/users/token/refresh/', data=data)
+        response = self.client.post(
+            path='/users/token/refresh/',
+            data=data,
+            **auth(self.simple_user)
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_admin_user_refresh_token(self):
@@ -54,35 +69,27 @@ class UserTestCase(APITestCase):
         data = {
             'refresh': str(self.admin_user_refresh)
         }
-        response = self.client.post(path='/users/token/refresh/', data=data)
+        response = self.client.post(
+            path='/users/token/refresh/',
+            data=data,
+            **auth(self.admin_user)
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_simple_user_users_list(self):
         # Simple user get list of users
-        response = self.client.get(path='/users/user/', **auth(self.simple_user))
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        response = self.client.get(
+            path='/users/user/',
+            **auth(self.simple_user)
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_admin_user_users_list(self):
         # Admin user get list of users
-        response = self.client.get(path='/users/user/', **auth(self.admin_user))
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_unauthorized_user_login_simple_user(self):
-        # Unauthorized user login as simple user
-        data = {
-            'email': self.simple_user.email,
-            'password': self.simple_user_password
-        }
-        response = self.client.post(path='/users/user/login/', data=data)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_unauthorized_user_login_admin_user(self):
-        # Unauthorized user login as admin user
-        data = {
-            'email': self.admin_user.email,
-            'password': self.admin_user_password
-        }
-        response = self.client.post(path='/users/user/login/', data=data)
+        response = self.client.get(
+            path='/users/user/',
+            **auth(self.admin_user)
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_unauthorized_user_register_used_user_data(self):
@@ -91,9 +98,12 @@ class UserTestCase(APITestCase):
             'first_name': self.simple_user.first_name,
             'last_name': self.simple_user.last_name,
             'email': self.simple_user.email,
-            'password': self.simple_user_password
+            'password': 'string'
         }
-        response = self.client.post(path='/users/user/register/', data=data)
+        response = self.client.post(
+            path='/users/user/register/',
+            data=data
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_unauthorized_user_register_new_user_data(self):
@@ -104,5 +114,8 @@ class UserTestCase(APITestCase):
             'email': 'test@gmail.com',
             'password': '000000'
         }
-        response = self.client.post(path='/users/user/register/', data=data)
+        response = self.client.post(
+            path='/users/user/register/',
+            data=data
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
