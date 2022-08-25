@@ -138,7 +138,7 @@ class CommentAdmin(ModelAdmin):
 
 @admin.register(TimeLog)
 class TimeLogAdmin(ModelAdmin):
-    list_display = ('id', 'task', 'user', 'started_at', 'duration')
+    list_display = ('id', 'task', 'user', 'started_at', 'duration', 'is_started', 'is_stopped')
 
 
 @admin.register(Attachment)
