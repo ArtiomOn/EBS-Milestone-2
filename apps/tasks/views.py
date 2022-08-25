@@ -18,7 +18,6 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
-from apps.tasks.filtersets import TaskFilterSet
 from apps.tasks.models import (
     Task,
     Comment,
@@ -63,7 +62,7 @@ class TaskViewSet(
     permission_classes = (IsAuthenticated,)
     authentication_classes = [JWTAuthentication]
     filter_backends = [filters.SearchFilter]
-    filterset_class = TaskFilterSet
+    filterset_fields = ['status']
     search_fields = ['title']
 
     def get_queryset(self):
@@ -208,13 +207,16 @@ class TaskCommentViewSet(
     permission_classes = (IsAuthenticated,)
     authentication_classes = [JWTAuthentication]
 
-    def get_queryset(self):
-        if self.action == 'list':
-            return self.queryset.filter(
-                task_id=self.kwargs.get(
-                    'task__pk'
-                ))
-        return super(TaskCommentViewSet, self).get_queryset()
+    def list(self, request, *args, **kwargs):
+        queryset = self.queryset.filter(
+            task_id=self.kwargs.get(
+                'task__pk'
+            ))
+        serializer = self.get_serializer(
+            queryset,
+            many=True
+        )
+        return Response(serializer.data)
 
     def perform_create(self, serializer):
         task_id = self.kwargs.get('task__pk')
@@ -252,7 +254,9 @@ class TaskTimeLogViewSet(
         serializer.save(
             task_id=self.kwargs.get('task__pk'),
             user=self.request.user,
-            duration=duration
+            duration=duration,
+            is_started=True,
+            is_stopped=True,
         )
 
     def list(self, request, *args, **kwargs):
@@ -274,12 +278,22 @@ class TaskTimeLogViewSet(
     )
     def start_timer(self, request, *args, **kwargs):
         task_id = self.kwargs.get('task__pk')
-        self.queryset.create(
-            task_id=task_id,
+        existing_unstopped_timelog = self.queryset.filter(
             user=self.request.user,
-            started_at=datetime.datetime.now()
+            is_started=True,
+            is_stopped=False,
         )
-        return Response(status=status.HTTP_201_CREATED)
+        if not existing_unstopped_timelog:
+            self.queryset.create(
+                task_id=task_id,
+                user=self.request.user,
+                started_at=datetime.datetime.now(),
+                is_started=True,
+                is_stopped=False,
+            )
+            return Response(status=status.HTTP_201_CREATED)
+        else:
+            raise ValueError('You have unstopped tasks')
 
     @action(
         methods=['post'],
@@ -288,12 +302,18 @@ class TaskTimeLogViewSet(
     )
     def stop_timer(self, request, *args, **kwargs):
         instance = self.queryset.filter(
+            is_started=True,
+            is_stopped=False,
             duration=None,
             user=self.request.user
         ).first()
-        instance.duration = datetime.datetime.now() - instance.started_at
-        instance.save()
-        return Response(status=status.HTTP_200_OK)
+        if instance:
+            instance.duration = datetime.datetime.now() - instance.started_at
+            instance.is_stopped = True
+            instance.save()
+            return Response(status=status.HTTP_200_OK)
+        else:
+            raise ValueError("You don't have started time logs")
 
 
 class TimeLogViewSet(

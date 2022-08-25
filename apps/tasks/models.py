@@ -14,10 +14,9 @@ from guardian.shortcuts import assign_perm
 from rest_framework.request import Request
 from wkhtmltopdf.views import PDFTemplateResponse
 
-from config import settings
-from config.settings import AUTH_USER_MODEL
+from django.conf import settings
 
-User = AUTH_USER_MODEL
+User = settings.AUTH_USER_MODEL
 
 __all__ = [
     'Task',
@@ -164,6 +163,12 @@ class TimeLog(models.Model):
     started_at = models.DateTimeField(
         null=True,
         blank=True
+    )
+    is_started = models.BooleanField(
+        default=False
+    )
+    is_stopped = models.BooleanField(
+        default=False
     )
     duration = models.DurationField(
         null=True,
