@@ -154,7 +154,6 @@ class TaskViewSet(
     @action(
         methods=['get'],
         detail=False,
-        permission_classes=(IsAuthenticated,)
     )
     def task_list_convert_pdf(self, request, *args, **kwargs):
         template_name = 'tasks/task_list.html'
@@ -173,7 +172,6 @@ class TaskViewSet(
     @action(
         methods=['get'],
         detail=True,
-        permission_classes=(IsAuthenticated,)
     )
     def task_detail_convert_pdf(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -181,9 +179,7 @@ class TaskViewSet(
         filename = f'task_detail__id_{instance.id}.pdf'
 
         context = {
-            'tasks': instance,
-            'comments': instance.comments.all(),
-            'timelogs': instance.time_logs.all()
+            'tasks': instance
         }
         return instance.html_convert_pdf(
             request=request,
