@@ -52,23 +52,23 @@ class TaskTestCase(APITestCase):
 
         self.task = Task.objects.bulk_create([
             Task(title='#1',
+                 project_id=3,
                  description='#1',
-                 assigned_to=self.admin_user,
                  status=True
                  ),
             Task(title='#2',
+                 project_id=3,
                  description='#2',
-                 assigned_to=self.admin_user,
                  status=True
                  ),
             Task(title='#3',
+                 project_id=3,
                  description='#3',
-                 assigned_to=self.simple_user,
                  status=False
                  ),
             Task(title='#4',
+                 project_id=3,
                  description='#4',
-                 assigned_to=self.simple_user,
                  status=False
                  )
         ])

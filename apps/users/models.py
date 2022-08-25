@@ -9,15 +9,8 @@ from django.utils.translation import gettext_lazy as _
 from apps.tasks.models import Attachment
 
 __all__ = [
-    'CustomUserManager',
     'CustomUser'
 ]
-
-
-class CustomUserManager(UserManager):
-
-    def create_superuser(self, email=None, password=None, **extra_fields):
-        return super(CustomUserManager, self).create_superuser(email, password, **extra_fields)
 
 
 class CustomUser(AbstractUser):
@@ -33,7 +26,7 @@ class CustomUser(AbstractUser):
         blank=True,
         null=True
     )
-    objects = CustomUserManager()
+    objects = UserManager()
 
     REQUIRED_FIELDS = []
     USERNAME_FIELD = 'email'

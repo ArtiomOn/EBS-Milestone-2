@@ -2,19 +2,18 @@ from datetime import datetime
 from pathlib import Path
 from typing import Union
 
+from django.conf import settings
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.mail import send_mail
 from django.db import models
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Sum
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from guardian.shortcuts import assign_perm
 from rest_framework.request import Request
 from wkhtmltopdf.views import PDFTemplateResponse
-
-from django.conf import settings
 
 User = settings.AUTH_USER_MODEL
 
@@ -23,14 +22,22 @@ __all__ = [
     'Comment',
     'TimeLog',
     'Attachment',
-    'Project'
+    'Project',
+    'TaskQuerySet',
+    'ProjectQuerySet'
 ]
 
 
+# noinspection PyTypeChecker
 class TaskQuerySet(QuerySet):
-    def allowed_to(self, user: User):
+    def allowed_to(self, user: User) -> 'TaskQuerySet':
         return self.filter(
             project_id__in=Project.objects.allowed_to(user).values('id')
+        )
+
+    def with_duration(self) -> 'TaskQuerySet':
+        return self.annotate(
+            duration=Sum('time_logs__duration')
         )
 
     @staticmethod
@@ -128,26 +135,7 @@ class Comment(models.Model):
         return f'{self.id}'
 
 
-class TimeLogQuerySet(QuerySet):
-    def user_start_timer(self, task_id: int, user: User):
-        self.create(
-            task_id=task_id,
-            user=user,
-            started_at=datetime.now()
-        )
-
-    def user_stop_timer(self, user: User):
-        instance = self.filter(
-            duration=None,
-            user=user
-        ).first()
-        instance.duration = datetime.now() - instance.started_at
-        instance.save()
-
-
 class TimeLog(models.Model):
-    objects = TimeLogQuerySet.as_manager()
-
     task = models.ForeignKey(
         Task,
         on_delete=models.CASCADE,
@@ -229,8 +217,9 @@ class Attachment(models.Model):
         super(Attachment, self).save(force_insert, force_update, using, update_fields)
 
 
+# noinspection PyTypeChecker
 class ProjectQuerySet(QuerySet):
-    def allowed_to(self, user: User):
+    def allowed_to(self, user: User) -> 'ProjectQuerySet':
         return self.filter(
             id__in=Project.objects.filter(member__id=user.id)
         )
