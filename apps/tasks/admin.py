@@ -79,16 +79,10 @@ def update_task_status_false(model_admin, request, queryset):
 
 @admin.action(description='Send email to user')
 def send_user_email(model_admin, request, queryset):
-    queryset = queryset.select_related(
-        'assigned_to'
-    ).values_list(
-        'assigned_to__email',
-        flat=True
-    )
-    Task.send_user_email(
+    model_admin.model.send_user_email(
         message='test message from django admin',
         subject='test subject from django admin',
-        recipient=queryset
+        recipient=request.user.email
     )
 
 
@@ -104,21 +98,21 @@ class TaskAdmin(GuardedModelAdmin):
     ]
 
     def get_queryset(self, request):
-        user = request.user
-        Task.objects.assign_user_permission(user=user)
         queryset = super(TaskAdmin, self).get_queryset(request)
+        user = request.user
+        queryset.model.objects.assign_user_permission(user=user)
         if request.user.is_superuser:
             return queryset
         else:
             return get_objects_for_user(
-                user=request.user,
+                user=user,
                 perms=[
                     'tasks.view_task',
                     'tasks.add_task',
                     'tasks.delete_task',
                     'tasks.change_task'
                 ],
-                klass=queryset.allowed_to(user=request.user),
+                klass=queryset.allowed_to(user=user),
                 any_perm=True
             )
 
