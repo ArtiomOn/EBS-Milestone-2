@@ -101,8 +101,13 @@ class TaskViewSet(
         serializer_class=TaskListSerializer
     )
     def complete_task(self, request, *args, **kwargs):
-        queryset = self.queryset.filter(status=True)
-        serializer = self.get_serializer(queryset, many=True)
+        queryset = self.queryset.filter(
+            status=True
+        )
+        serializer = self.get_serializer(
+            queryset,
+            many=True
+        )
         return Response(serializer.data)
 
     @action(
@@ -140,8 +145,12 @@ class TaskViewSet(
             instance,
             data=request.data
         )
-        serializer.is_valid(raise_exception=True)
-        serializer.save(status=True)
+        serializer.is_valid(
+            raise_exception=True
+        )
+        serializer.save(
+            status=True
+        )
         user_email = request.user.email
         if user_email:
             instance.send_user_email(
@@ -259,7 +268,7 @@ class TaskTimeLogViewSet(
         return Response(serializer.data)
 
     @action(
-        methods=['get'],
+        methods=['post'],
         url_path='start_timer',
         detail=False
     )
@@ -273,7 +282,7 @@ class TaskTimeLogViewSet(
         return Response(status=status.HTTP_201_CREATED)
 
     @action(
-        methods=['get'],
+        methods=['post'],
         url_path='stop_timer',
         detail=False
     )
