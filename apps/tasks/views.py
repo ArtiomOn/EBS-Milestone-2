@@ -3,8 +3,10 @@ from datetime import timedelta
 
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
+
 from rest_framework import status, filters
 from rest_framework.decorators import action
+from rest_framework.exceptions import NotFound
 from rest_framework.mixins import (
     ListModelMixin,
     RetrieveModelMixin,
@@ -24,6 +26,8 @@ from apps.tasks.models import (
     TimeLog,
     Attachment,
     Project,
+    TaskQuerySet,
+    ProjectQuerySet,
 )
 from apps.tasks.serializers import (
     TaskSerializer,
@@ -57,7 +61,7 @@ class TaskViewSet(
     DestroyModelMixin,
     GenericViewSet
 ):
-    queryset = Task.objects.all()
+    queryset: TaskQuerySet = Task.objects.all()
     serializer_class = TaskSerializer
     permission_classes = (IsAuthenticated,)
     authentication_classes = [JWTAuthentication]
@@ -66,11 +70,12 @@ class TaskViewSet(
     search_fields = ['title']
 
     def get_queryset(self):
+        queryset = super(TaskViewSet, self).get_queryset()
+
         if self.action == 'list':
-            return self.queryset.annotate(
-                duration=Sum('time_logs__duration')
-            )
-        return super(TaskViewSet, self).get_queryset()
+            return queryset.with_duration()
+
+        return queryset
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -279,10 +284,11 @@ class TaskTimeLogViewSet(
     def start_timer(self, request, *args, **kwargs):
         task_id = self.kwargs.get('task__pk')
         existing_unstopped_timelog = self.queryset.filter(
+            task_id=task_id,
             user=self.request.user,
             is_started=True,
             is_stopped=False,
-        )
+        ).last()
         if not existing_unstopped_timelog:
             self.queryset.create(
                 task_id=task_id,
@@ -293,7 +299,7 @@ class TaskTimeLogViewSet(
             )
             return Response(status=status.HTTP_201_CREATED)
         else:
-            raise ValueError('You have unstopped tasks')
+            raise NotFound('You have some unstopped tasks')
 
     @action(
         methods=['post'],
@@ -301,7 +307,9 @@ class TaskTimeLogViewSet(
         detail=False
     )
     def stop_timer(self, request, *args, **kwargs):
+        task_id = self.kwargs.get('task__pk')
         instance = self.queryset.filter(
+            task_id=task_id,
             is_started=True,
             is_stopped=False,
             duration=None,
@@ -310,10 +318,11 @@ class TaskTimeLogViewSet(
         if instance:
             instance.duration = datetime.datetime.now() - instance.started_at
             instance.is_stopped = True
+            instance.is_started = False
             instance.save()
             return Response(status=status.HTTP_200_OK)
         else:
-            raise ValueError("You don't have started time logs")
+            raise NotFound("You don't have started time logs")
 
 
 class TimeLogViewSet(
@@ -371,7 +380,7 @@ class ProjectViewSet(
     CreateModelMixin,
     GenericViewSet
 ):
-    queryset = Project.objects.all()
+    queryset: ProjectQuerySet = Project.objects.all()
     serializer_class = ProjectSerializer
     permission_classes = (IsAuthenticated,)
 

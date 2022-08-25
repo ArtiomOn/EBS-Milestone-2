@@ -15,39 +15,19 @@ def auth(user):
 
 
 class UserTestCase(APITestCase):
+    fixtures = ['user_fixtures.json']
 
-    def setUp(self) -> None:
-        self.simple_user = User.objects.create(
-            email='simple@test.com',
-            first_name='simple_first_name',
-            last_name='simple_last_name',
-            username='simple@test.com',
-            is_superuser=False,
-            is_staff=False,
-        )
-        self.simple_user_password = 'simple'
-        self.simple_user.set_password(self.simple_user_password)
-        self.simple_user.save()
-        self.simple_user_refresh = RefreshToken.for_user(self.simple_user)
+    def setUp(self):
+        self.simple_user = User.objects.get(email='user@example.com')
 
-        self.admin_user = User.objects.create(
-            email='admin@test.com',
-            first_name='admin_first_name',
-            last_name='admin_last_name',
-            username='admin@test.com',
-            is_superuser=True,
-            is_staff=True,
-        )
-        self.admin_user_password = 'admin'
-        self.admin_user.set_password(self.admin_user_password)
-        self.admin_user.save()
-        self.admin_user_refresh = RefreshToken.for_user(self.admin_user)
+        self.admin_user = User.objects.get(email='admin@admin.com')
+        self.refresh = RefreshToken.for_user(self.admin_user)
 
     def test_simple_user_access_token(self):
         # Simple user get access token
         data = {
             'email': self.simple_user.email,
-            'password': self.simple_user_password
+            'password': 'string'
         }
         response = self.client.post(path='/users/token/', data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
