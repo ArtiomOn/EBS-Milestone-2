@@ -68,18 +68,10 @@ def update_task_status_false(model_admin, request, queryset):
             ).update(
                 status=False
             )
-            user_email = queryset.filter(
-                pk__in=[tasks_id]
-            ).select_related(
-                'assigned_to'
-            ).values_list(
-                'assigned_to__email',
-                flat=True
-            )
-            Task.send_user_email(
+            model_admin.model.send_user_email(
                 message='Admin changed you task status to Undone!',
                 subject=f'You have one undone Task. ID: {tasks_id}',
-                recipient=user_email,
+                recipient=request.user.email,
             )
     else:
         raise NotFound
