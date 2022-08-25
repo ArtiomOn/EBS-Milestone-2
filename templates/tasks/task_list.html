@@ -47,7 +47,7 @@
         <h1>Time logs</h1>
         <hr>
     {% endif %}
-    {% for timelog in task.time_logs.all|in_timelog:task %}
+    {% for timelog in task.time_logs.all|in_task:task %}
         <p>Timelog id: {{ timelog.id }} | Timelog owner: {{ timelog.user }} | Timelog started
             at: {{ timelog.started_at }}
             | Timelog duration: {{ timelog.duration }}</p>
