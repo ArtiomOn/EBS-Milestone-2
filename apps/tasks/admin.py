@@ -5,7 +5,6 @@ from django.db.models import QuerySet
 from guardian.models import UserObjectPermission
 from guardian.admin import GuardedModelAdmin
 from guardian.shortcuts import get_objects_for_user
-from rest_framework.exceptions import NotFound
 
 from apps.tasks.models import (
     Task,
@@ -45,24 +44,25 @@ class FileSizeFilter(SimpleListFilter):
 
 @admin.action(description='Update task status to True')
 def update_task_status_true(model_admin, request, queryset):
-    status = queryset.values_list(
+    status = list(queryset.values_list(
         'status',
         flat=True
-    )
-    if not all(list(status)):
-        queryset.update(
-            status=True
-        )
-    else:
-        raise NotFound
+    ))
+    for task_status in status:
+        if not task_status:
+            queryset.update(
+                status=True
+            )
+        else:
+            continue
 
 
 @admin.action(description='Update task status to False')
 def update_task_status_false(model_admin, request, queryset):
     task_id = list(queryset.values_list('id', flat=True))
-    status = queryset.values_list('status', flat=True)
-    if all(list(status)):
-        for (task_status, tasks_id) in zip(status, task_id):
+    status = list(queryset.values_list('status', flat=True))
+    for (task_status, tasks_id) in zip(status, task_id):
+        if task_status:
             queryset.filter(
                 pk__in=[tasks_id]
             ).update(
@@ -73,8 +73,8 @@ def update_task_status_false(model_admin, request, queryset):
                 subject=f'You have one undone Task. ID: {tasks_id}',
                 recipient=request.user.email,
             )
-    else:
-        raise NotFound
+        else:
+            continue
 
 
 @admin.action(description='Send email to user')

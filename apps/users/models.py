@@ -44,9 +44,10 @@ class CustomUser(AbstractUser):
 
 @receiver(pre_save, sender=CustomUser, dispatch_uid='check_image_extension')
 def send_email_user(sender, instance, **kwargs):
-    instance: CustomUser = instance
-    allowed_extensions = ['.jpg', '.png', '.jpeg']
-    if instance.profile_image is not None:
-        extension = Path(instance.profile_image.file_url.name).suffix
-        if extension not in allowed_extensions:
-            raise ValueError(f'Extensions are {[extension for extension in allowed_extensions]}')
+    if kwargs.get('created', True) and not kwargs.get('raw', False):
+        instance: CustomUser = instance
+        allowed_extensions = ['.jpg', '.png', '.jpeg']
+        if instance.profile_image is not None:
+            extension = Path(instance.profile_image.file_url.name).suffix
+            if extension not in allowed_extensions:
+                raise ValueError(f'Extensions are {[extension for extension in allowed_extensions]}')

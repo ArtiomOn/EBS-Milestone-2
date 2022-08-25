@@ -14,7 +14,7 @@ from guardian.shortcuts import assign_perm
 from rest_framework.request import Request
 from wkhtmltopdf.views import PDFTemplateResponse
 
-from config import settings
+from django.conf import settings
 from config.settings import AUTH_USER_MODEL
 
 User = AUTH_USER_MODEL
