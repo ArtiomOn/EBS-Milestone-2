@@ -1,10 +1,9 @@
 from django.urls import path
-
+from rest_framework_nested.routers import DefaultRouter
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenObtainPairView,
 )
-from rest_framework_nested.routers import DefaultRouter
 
 from apps.users.views import UserViewSet
 

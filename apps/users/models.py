@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from django.contrib.auth.models import UserManager, AbstractUser
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
@@ -14,6 +14,9 @@ __all__ = [
 
 
 class CustomUser(AbstractUser):
+    REQUIRED_FIELDS = []
+    USERNAME_FIELD = 'email'
+
     email = models.EmailField(
         _('email address'),
         blank=False,
@@ -26,15 +29,12 @@ class CustomUser(AbstractUser):
         blank=True,
         null=True
     )
-    objects = UserManager()
-
-    REQUIRED_FIELDS = []
-    USERNAME_FIELD = 'email'
 
     class Meta:
         app_label = 'users'
 
 
+# noinspection PyUnusedLocal
 @receiver(pre_save, sender=CustomUser, dispatch_uid='check_image_extension')
 def send_email_user(sender, instance, **kwargs):
     if kwargs.get('created', True) and not kwargs.get('raw', False):

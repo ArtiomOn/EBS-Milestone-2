@@ -335,6 +335,7 @@ class TaskTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
+# noinspection DuplicatedCode
 class CommentTestCase(APITestCase):
     def setUp(self) -> None:
         self.simple_user = User.objects.create(
@@ -422,7 +423,7 @@ class CommentTestCase(APITestCase):
         # Admin user get list of comments by task id
         task_id: int = Task.objects.last().id
         response = self.client.get(
-            f'/tasks/tasks/1/comments/',
+            f'/tasks/tasks/{task_id}/comments/',
             **auth(self.admin_user)
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -482,6 +483,7 @@ class CommentTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
+# noinspection DuplicatedCode
 class TimeLogTestCase(APITestCase):
     def setUp(self) -> None:
         self.simple_user = User.objects.create(

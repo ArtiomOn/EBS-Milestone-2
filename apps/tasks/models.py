@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Union
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.mail import send_mail
@@ -9,12 +10,11 @@ from django.db import models
 from django.db.models import QuerySet, Sum
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
 from guardian.shortcuts import assign_perm
 from rest_framework.request import Request
 from wkhtmltopdf.views import PDFTemplateResponse
 
-User = settings.AUTH_USER_MODEL
+User = get_user_model()
 
 __all__ = [
     'Task',
@@ -260,6 +260,7 @@ class Project(models.Model):
         return self.name
 
 
+# noinspection PyUnusedLocal
 @receiver(post_save, sender=Task, dispatch_uid='send_email_user')
 def send_email_user(sender, instance, **kwargs):
     change_data = kwargs['update_fields']
