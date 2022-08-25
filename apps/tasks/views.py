@@ -344,7 +344,7 @@ class TimeLogViewSet(
     def time_log_month(self, request, *args, **kwargs):
         queryset = self.queryset.filter(
             user=self.request.user,
-            started_at__month=TimeLog.current_month(),
+            started_at__month=datetime.datetime.now().strftime('%m'),
         )
         return Response(
             queryset.aggregate(

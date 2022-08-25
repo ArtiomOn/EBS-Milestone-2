@@ -1,4 +1,3 @@
-from datetime import datetime
 from pathlib import Path
 from typing import Union
 
@@ -174,10 +173,6 @@ class TimeLog(models.Model):
 
     def __str__(self):
         return f'{self.id}'
-
-    @staticmethod
-    def current_month():
-        return datetime.now().strftime('%m')
 
 
 class Attachment(models.Model):
