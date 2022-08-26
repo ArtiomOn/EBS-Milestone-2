@@ -1,4 +1,3 @@
-import datetime
 from datetime import timedelta, datetime
 
 from django.contrib.auth import get_user_model
@@ -292,7 +291,7 @@ class TaskTimeLogViewSet(
             self.queryset.create(
                 task_id=task_id,
                 user=self.request.user,
-                started_at=datetime.datetime.now(),
+                started_at=datetime.now(),
                 is_started=True,
                 is_stopped=False,
             )
@@ -315,7 +314,7 @@ class TaskTimeLogViewSet(
             user=self.request.user
         ).first()
         if instance:
-            instance.duration = datetime.datetime.now() - instance.started_at
+            instance.duration = datetime.now() - instance.started_at
             instance.is_stopped = True
             instance.is_started = False
             instance.save()
