@@ -39,7 +39,7 @@ class TaskQuerySet(QuerySet):
         )
 
     @staticmethod
-    def assign_user_permission(user: User):
+    def assign_user_permission(user: User) -> None:
         assign_perm('tasks.view_task', user)
         assign_perm('tasks.add_task', user)
         assign_perm('tasks.delete_task', user)
@@ -86,7 +86,7 @@ class Task(models.Model):
         return self.title
 
     @staticmethod
-    def send_user_email(message: str, subject: str, recipient: Union[QuerySet, set]):
+    def send_user_email(message: str, subject: str, recipient: Union[QuerySet, set, str]) -> None:
         send_mail(
             message=message,
             subject=subject,
@@ -96,7 +96,7 @@ class Task(models.Model):
         )
 
     @staticmethod
-    def html_convert_pdf(request: Request, template: str, context: dict, filename: str):
+    def html_convert_pdf(request: Request, template: str, context: dict, filename: str) -> PDFTemplateResponse:
         # Convert html file to pdf
         return PDFTemplateResponse(
             request=request,
@@ -261,7 +261,7 @@ class Project(models.Model):
 
 # noinspection PyUnusedLocal
 @receiver(post_save, sender=Task, dispatch_uid='send_email_user')
-def send_email_user(sender, instance, **kwargs):
+def send_email_user(sender, instance, **kwargs) -> None:
     change_data = kwargs['update_fields']
     status = instance.status
     if change_data is not None:

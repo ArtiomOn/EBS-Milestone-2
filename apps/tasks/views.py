@@ -1,7 +1,7 @@
 from datetime import timedelta, datetime
 
 from django.contrib.auth import get_user_model
-from django.db.models import Sum
+from django.db.models import Sum, QuerySet
 from rest_framework import status, filters
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
@@ -67,7 +67,7 @@ class TaskViewSet(
     filterset_fields = ['status']
     search_fields = ['title']
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet:
         queryset = super(TaskViewSet, self).get_queryset()
 
         if self.action == 'list':
@@ -119,7 +119,7 @@ class TaskViewSet(
         serializer_class=TaskAssignNewUserSerializer
     )
     def assign(self, request, *args, **kwargs):
-        instance = self.get_object()
+        instance: Task = self.get_object()
         serializer = self.get_serializer(
             instance,
             data=request.data
@@ -142,7 +142,7 @@ class TaskViewSet(
         serializer_class=TaskUpdateStatusSerializer
     )
     def update_status(self, request, *args, **kwargs):
-        instance = self.get_object()
+        instance: Task = self.get_object()
         serializer = self.get_serializer(
             instance,
             data=request.data
@@ -153,7 +153,7 @@ class TaskViewSet(
         serializer.save(
             status=True
         )
-        user_email = request.user.email
+        user_email: str = request.user.email
         if user_email:
             instance.send_user_email(
                 message='commented task is completed',
@@ -167,9 +167,9 @@ class TaskViewSet(
         detail=False,
     )
     def task_list_convert_pdf(self, request, *args, **kwargs):
-        template_name = 'tasks/task_list.html'
-        filename = 'task_list.pdf'
-        context = {
+        template_name: str = 'tasks/task_list.html'
+        filename: str = 'task_list.pdf'
+        context: dict = {
             'tasks': self.get_queryset(),
         }
 
@@ -185,11 +185,11 @@ class TaskViewSet(
         detail=True,
     )
     def task_detail_convert_pdf(self, request, *args, **kwargs):
-        instance = self.get_object()
-        template_name = 'tasks/task_detail.html'
-        filename = f'task_detail__id_{instance.id}.pdf'
+        instance: Task = self.get_object()
+        template_name: str = 'tasks/task_detail.html'
+        filename: str = f'task_detail__id_{instance.id}.pdf'
 
-        context = {
+        context: dict = {
             'tasks': instance
         }
         return instance.html_convert_pdf(
@@ -222,12 +222,12 @@ class TaskCommentViewSet(
         return Response(serializer.data)
 
     def perform_create(self, serializer):
-        task_id = self.kwargs.get('task__pk')
-        instance = serializer.save(
+        task_id: int = self.kwargs.get('task__pk')
+        instance: Comment = serializer.save(
             owner=self.request.user,
             task_id=task_id
         )
-        user_email = self.request.user.email
+        user_email: str = self.request.user.email
         instance.task.send_user_email(
             message=f'You task with id:{task_id} is commented',
             subject='Your task is commented',
@@ -251,7 +251,7 @@ class TaskTimeLogViewSet(
         return super(TaskTimeLogViewSet, self).get_serializer_class()
 
     def perform_create(self, serializer):
-        duration = timedelta(
+        duration: timedelta = timedelta(
             minutes=self.request.data['duration']
         )
         serializer.save(
@@ -280,8 +280,8 @@ class TaskTimeLogViewSet(
         detail=False
     )
     def start_timer(self, request, *args, **kwargs):
-        task_id = self.kwargs.get('task__pk')
-        existing_unstopped_timelog = self.queryset.filter(
+        task_id: int = self.kwargs.get('task__pk')
+        existing_unstopped_timelog: TimeLog = self.queryset.filter(
             task_id=task_id,
             user=self.request.user,
             is_started=True,
@@ -305,8 +305,8 @@ class TaskTimeLogViewSet(
         detail=False
     )
     def stop_timer(self, request, *args, **kwargs):
-        task_id = self.kwargs.get('task__pk')
-        instance = self.queryset.filter(
+        task_id: int = self.kwargs.get('task__pk')
+        instance: TimeLog = self.queryset.filter(
             task_id=task_id,
             is_started=True,
             is_stopped=False,
@@ -340,7 +340,7 @@ class TimeLogViewSet(
         url_path='time_logs_month'
     )
     def time_log_month(self, request, *args, **kwargs):
-        queryset = self.queryset.filter(
+        queryset: TimeLog = self.queryset.filter(
             user=self.request.user,
             started_at__month=datetime.now().strftime('%m'),
         )

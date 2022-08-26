@@ -9,6 +9,7 @@ from apps.users.models import CustomUser
 class CustomUserAdmin(ModelAdmin):
     list_display = ('id', 'username', 'first_name', 'last_name', 'email', 'is_superuser', 'is_staff')
 
+    # noinspection DuplicatedCode
     def save_model(self, request, obj, form, change):
         ignored_keys = []
         update_fields = []
