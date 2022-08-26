@@ -100,7 +100,7 @@ class AttachmentSerializer(serializers.ModelSerializer):
     file_size = serializers.SerializerMethodField()
 
     @staticmethod
-    def get_file_size(instance):
+    def get_file_size(instance) -> filesizeformat:
         return filesizeformat(instance.file_size)
 
     class Meta:

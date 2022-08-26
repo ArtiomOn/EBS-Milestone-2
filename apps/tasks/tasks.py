@@ -10,9 +10,9 @@ __all__ = [
 
 
 @shared_task
-def send_email():
+def send_email() -> None:
     # Send email to all people that have status False on their task
-    user_email = set(Task.objects.select_related(
+    user_email: set = set(Task.objects.select_related(
         'assigned_to'
     ).filter(
         status=False

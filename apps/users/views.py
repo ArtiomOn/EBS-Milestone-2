@@ -39,13 +39,13 @@ class UserViewSet(
         )
         serializer.is_valid(raise_exception=True)
 
-        user = serializer.save(
+        user: User = serializer.save(
             username=serializer.validated_data['email']
         )
 
         user.set_password(serializer.validated_data['password'])
         user.save()
-        refresh = RefreshToken.for_user(user)
+        refresh: RefreshToken = RefreshToken.for_user(user)
         return Response({
             'refresh': str(refresh),
             'access': str(refresh.access_token)

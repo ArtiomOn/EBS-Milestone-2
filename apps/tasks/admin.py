@@ -18,14 +18,14 @@ class FileSizeFilter(SimpleListFilter):
     title = 'size'
     parameter_name = 'file_size'
 
-    def lookups(self, request, model_admin):
+    def lookups(self, request, model_admin) -> list:
         return [
             ('1Mb', '≤1Mb'),
             ('5-10Mb', '5Mb-10Mb'),
             ('10Mb', '≥10Mb')
         ]
 
-    def queryset(self, request, queryset):
+    def queryset(self, request, queryset) -> 'Attachment':
         if self.value() == '1Mb':
             return queryset.filter(
                 file_size__lte=1_048_576
@@ -43,7 +43,7 @@ class FileSizeFilter(SimpleListFilter):
 
 # noinspection PyUnusedLocal
 @admin.action(description='Update task status to True')
-def update_task_status_true(model_admin, request, queryset):
+def update_task_status_true(model_admin, request, queryset) -> None:
     status = list(queryset.values_list(
         'status',
         flat=True
@@ -58,7 +58,7 @@ def update_task_status_true(model_admin, request, queryset):
 
 
 @admin.action(description='Update task status to False')
-def update_task_status_false(model_admin, request, queryset):
+def update_task_status_false(model_admin, request, queryset) -> None:
     task_id = list(queryset.values_list('id', flat=True))
     status = list(queryset.values_list('status', flat=True))
     for (task_status, tasks_id) in zip(status, task_id):
@@ -79,7 +79,7 @@ def update_task_status_false(model_admin, request, queryset):
 
 # noinspection PyUnusedLocal
 @admin.action(description='Send email to user')
-def send_user_email(model_admin, request, queryset):
+def send_user_email(model_admin, request, queryset) -> None:
     model_admin.model.send_user_email(
         message='test message from django admin',
         subject='test subject from django admin',
@@ -117,7 +117,8 @@ class TaskAdmin(GuardedModelAdmin):
                 any_perm=True
             )
 
-    def save_model(self, request, obj, form, change):
+    # noinspection DuplicatedCode
+    def save_model(self, request, obj, form, change) -> object:
         ignored_keys = []
         update_fields = []
         if bool(form.initial):
@@ -153,7 +154,7 @@ class AttachmentAdmin(ModelAdmin):
 class ProjectAdmin(GuardedModelAdmin):
     list_display = ('id', 'name', 'owner', 'description', 'created_at', 'updated_at')
 
-    def get_queryset(self, request):
+    def get_queryset(self, request) -> QuerySet:
         queryset = super(ProjectAdmin, self).get_queryset(request)
         if request.user.is_superuser:
             return queryset
