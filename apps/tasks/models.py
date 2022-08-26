@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import Union
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.mail import send_mail
@@ -14,7 +13,7 @@ from guardian.shortcuts import assign_perm
 from rest_framework.request import Request
 from wkhtmltopdf.views import PDFTemplateResponse
 
-User = get_user_model()
+User = settings.AUTH_USER_MODEL
 
 __all__ = [
     'Task',
