@@ -1,5 +1,16 @@
 # EBS-Milestone-2
 
+## About project
+EBS-Milestone-2 shows the power and possibilities of REST API with close 
+relation to Django. In creating this project, <br> my intention was to develop 
+personal skills. For example, Celery is for the first time library used by me. 
+I realized scheduled <br> tasks like sending user emails every day at 6 PM, only if 
+his tasks are not completed. Another library for the first time library <br> used 
+by me is django-allauth. Thereby, I learned how to create Google and GitHub authorization.
+
+You can use this project as a cheat sheet.
+
+
 ## Used technologies
 
 - [Django](https://www.djangoproject.com/)
@@ -7,10 +18,10 @@
 - [Swagger](https://swagger.io/docs/specification/2-0/what-is-swagger/)
 
 ## Installation
-
-1. Install requirements `pip install -r requirements.txt`
-2. Apply migrations to database `python manage.py migrate`
-3. Start the project `python manage.py runserver`
+1. Clone project `git clone https://github.com/ArtiomOn/EBS-Milestone-2.git`
+2. Install requirements `pip install -r requirements.txt`
+3. Apply migrations to database `python manage.py migrate`
+4. Start the project `python manage.py runserver`
 
 ## Endpoints:
 ### Users:
