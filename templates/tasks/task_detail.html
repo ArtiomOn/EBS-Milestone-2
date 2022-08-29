@@ -21,7 +21,7 @@
     <hr>
 {% endif %}
 {% for attachment in tasks.attachment.all %}
-    <img src="http://127.0.0.1:8000{% get_media_prefix %}{{ attachment.file_url }}"
+    <img src="{{ attachment.file_url.url }}"
          alt="{{ attachment.title }}">
 {% endfor %}
 {% if tasks.comments.all %}
@@ -37,7 +37,7 @@
         <hr>
     {% endif %}
     {% for attachment in comment.attachment.all %}
-        <img src="http://127.0.0.1:8000{% get_media_prefix %}{{ attachment.file_url }}"
+        <img src="{{ attachment.file_url.url }}"
              alt="{{ attachment.title }}">
     {% endfor %}
 {% endfor %}
@@ -56,7 +56,7 @@
             <hr>
         {% endif %}
         {% for attachment in timelog.attachment.all %}
-            <img src="http://127.0.0.1:8000{% get_media_prefix %}{{ attachment.file_url }}"
+            <img src="{{ attachment.file_url.url }}"
                  alt="{{ attachment.title }}">
             <hr>
         {% endfor %}
