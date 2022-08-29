@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'allauth.socialaccount.providers.github',
     'minio_storage',
+    'admin_honeypot',
 
     'apps.common',
     'apps.tasks',
