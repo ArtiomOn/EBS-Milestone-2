@@ -36,7 +36,7 @@ class CustomUser(AbstractUser):
 
 # noinspection PyUnusedLocal
 @receiver(pre_save, sender=CustomUser, dispatch_uid='check_image_extension')
-def send_email_user(sender, instance, **kwargs) -> None:
+def check_extension(sender, instance, **kwargs) -> None:
     if kwargs.get('created', True) and not kwargs.get('raw', False):
         instance: CustomUser = instance
         allowed_extensions = ['.jpg', '.png', '.jpeg']

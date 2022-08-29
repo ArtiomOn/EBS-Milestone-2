@@ -133,7 +133,16 @@ class Comment(models.Model):
         return f'{self.id}'
 
 
+class TimeLogQuerySet(QuerySet):
+    def with_total_time(self) -> 'TimeLogQuerySet':
+        return self.aggregate(
+            total_time=Sum('duration')
+        )
+
+
 class TimeLog(models.Model):
+    objects = TimeLogQuerySet.as_manager()
+
     task = models.ForeignKey(
         Task,
         on_delete=models.CASCADE,

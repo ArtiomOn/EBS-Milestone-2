@@ -1,7 +1,7 @@
 from datetime import timedelta, datetime
 
 from django.contrib.auth import get_user_model
-from django.db.models import Sum, QuerySet
+from django.db.models import QuerySet
 from rest_framework import status, filters
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
@@ -69,10 +69,8 @@ class TaskViewSet(
 
     def get_queryset(self) -> QuerySet:
         queryset = super(TaskViewSet, self).get_queryset()
-
         if self.action == 'list':
             return queryset.with_duration()
-
         return queryset
 
     def get_serializer_class(self):
@@ -211,10 +209,12 @@ class TaskCommentViewSet(
     authentication_classes = [JWTAuthentication]
 
     def list(self, request, *args, **kwargs):
+        task_id: int = self.kwargs.get(
+            'task__pk'
+        )
         queryset = self.queryset.filter(
-            task_id=self.kwargs.get(
-                'task__pk'
-            ))
+            task_id=task_id
+        )
         serializer = self.get_serializer(
             queryset,
             many=True
@@ -222,7 +222,9 @@ class TaskCommentViewSet(
         return Response(serializer.data)
 
     def perform_create(self, serializer):
-        task_id: int = self.kwargs.get('task__pk')
+        task_id: int = self.kwargs.get(
+            'task__pk'
+        )
         instance: Comment = serializer.save(
             owner=self.request.user,
             task_id=task_id
@@ -251,11 +253,14 @@ class TaskTimeLogViewSet(
         return super(TaskTimeLogViewSet, self).get_serializer_class()
 
     def perform_create(self, serializer):
+        task_id: int = self.kwargs.get(
+            'task__pk'
+        )
         duration: timedelta = timedelta(
             minutes=self.request.data['duration']
         )
         serializer.save(
-            task_id=self.kwargs.get('task__pk'),
+            task_id=task_id,
             user=self.request.user,
             duration=duration,
             is_started=True,
@@ -263,11 +268,13 @@ class TaskTimeLogViewSet(
         )
 
     def list(self, request, *args, **kwargs):
+        task_id: int = self.kwargs.get(
+            'task__pk'
+        )
         queryset = self.get_queryset(
         ).filter(
-            task_id=self.kwargs.get(
-                'task__pk'
-            ))
+            task_id=task_id
+        )
         serializer = self.get_serializer(
             queryset,
             many=True
@@ -280,7 +287,9 @@ class TaskTimeLogViewSet(
         detail=False
     )
     def start_timer(self, request, *args, **kwargs):
-        task_id: int = self.kwargs.get('task__pk')
+        task_id: int = self.kwargs.get(
+            'task__pk'
+        )
         existing_unstopped_timelog: TimeLog = self.queryset.filter(
             task_id=task_id,
             user=self.request.user,
@@ -305,7 +314,9 @@ class TaskTimeLogViewSet(
         detail=False
     )
     def stop_timer(self, request, *args, **kwargs):
-        task_id: int = self.kwargs.get('task__pk')
+        task_id: int = self.kwargs.get(
+            'task__pk'
+        )
         instance: TimeLog = self.queryset.filter(
             task_id=task_id,
             is_started=True,
@@ -340,14 +351,12 @@ class TimeLogViewSet(
         url_path='time_logs_month'
     )
     def time_log_month(self, request, *args, **kwargs):
-        queryset: TimeLog = self.queryset.filter(
+        queryset = self.queryset.filter(
             user=self.request.user,
             started_at__month=datetime.now().strftime('%m'),
         )
         return Response(
-            queryset.aggregate(
-                total_time=Sum('duration')
-            )
+            queryset.with_total_time()
         )
 
 
