@@ -13,9 +13,10 @@ schema_view = get_schema_view(
         description="Enjoy",
     ),
     public=True,
-    permission_classes=(AllowAny,)
+    permission_classes=[AllowAny]
 )
 
+# noinspection PyUnresolvedReferences
 urlpatterns = [
     path("", schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('admin/', include('admin_honeypot.urls', namespace='admin_honeypot')),
