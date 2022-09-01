@@ -81,6 +81,7 @@ class Task(models.Model):
     class Meta:
         verbose_name = 'Task'
         verbose_name_plural = 'Tasks'
+        ordering = ['id']
 
     def __str__(self):
         return self.title
@@ -128,6 +129,7 @@ class Comment(models.Model):
     class Meta:
         verbose_name = 'Comment'
         verbose_name_plural = 'Comments'
+        ordering = ['id']
 
     def __str__(self):
         return f'{self.id}'
@@ -178,6 +180,7 @@ class TimeLog(models.Model):
     class Meta:
         verbose_name = 'Time Log'
         verbose_name_plural = 'Time Logs'
+        ordering = ['id']
 
     def __str__(self):
         return f'{self.id}'
@@ -209,6 +212,7 @@ class Attachment(models.Model):
     class Meta:
         verbose_name = 'Attachment'
         verbose_name_plural = 'Attachments'
+        ordering = ['id']
 
     def __str__(self):
         return self.title
@@ -263,6 +267,7 @@ class Project(models.Model):
     class Meta:
         verbose_name = 'Project'
         verbose_name_plural = 'Projects'
+        ordering = ['id']
 
     def __str__(self):
         return self.name
