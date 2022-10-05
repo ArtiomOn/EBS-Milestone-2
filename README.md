@@ -2,11 +2,7 @@
 
 ## About project
 EBS-Milestone-2 shows the power and possibilities of REST API with close 
-relation to Django. In creating this project, my intention was to develop 
-personal skills. For example, Celery is for the first time library used by me. 
-I realized scheduled tasks like sending user emails every day at 6 PM, only if 
-his tasks are not completed. Another library for the first time library used 
-by me is django-allauth. Thereby, I learned how to create Google and GitHub authorization.
+relation to Django. 
 
 You can use this project as a cheat sheet.
 
